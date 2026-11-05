@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { LogOut, Monitor, ScanLine } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
+import { useTheme } from '../../../hooks/useTheme';
 import { HacCareLogo } from '../../../components/Layout/HacCareLogo';
 import { isEchoHost, setEchoPreferred } from '../echoMode';
 
@@ -10,6 +11,7 @@ import { isEchoHost, setEchoPreferred } from '../echoMode';
 export const EchoHeader: React.FC = () => {
   const { profile, signOut } = useAuth();
   const { currentTenant } = useTenant();
+  const { isDarkMode } = useTheme();
   const queryClient = useQueryClient();
   const inSimulation = currentTenant?.tenant_type === 'simulation_active';
 
@@ -32,7 +34,7 @@ export const EchoHeader: React.FC = () => {
     <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
       <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
         <div className="flex items-center gap-3 min-w-0">
-          <HacCareLogo size="22px" withBar />
+          <HacCareLogo size="22px" withBar variant={isDarkMode ? 'dark' : 'light'} />
           <span className="inline-flex items-center gap-1 rounded-full bg-haccare-teal/10 px-2.5 py-1 text-xs font-semibold text-haccare-teal">
             <ScanLine className="h-3.5 w-3.5" />
             Echo

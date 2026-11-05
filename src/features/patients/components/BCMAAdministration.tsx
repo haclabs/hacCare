@@ -356,7 +356,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-stretch justify-center sm:items-center sm:p-3">
       {/* ── Wide modal shell (full screen on phones) ── */}
-      <div className="bg-slate-50 sm:rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[95vh]">
+      <div className="bg-slate-50 dark:bg-slate-700/50 sm:rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[95vh]">
 
         {/* ── Dark header bar ── */}
         <div className="bg-slate-800 text-white px-3 py-3 sm:px-6 sm:py-4 flex items-center justify-between gap-2 shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-4">
@@ -407,40 +407,40 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
           {/* LEFT — patient + medication context (hidden on complete step) */}
           {currentStep !== 'complete' && (
-          <div className="shrink-0 bg-white border-b border-slate-200 grid grid-cols-2 md:w-72 md:border-b-0 md:border-r md:flex md:flex-col md:overflow-y-auto">
+          <div className="shrink-0 bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-slate-700 grid grid-cols-2 md:w-72 md:border-b-0 md:border-r md:flex md:flex-col md:overflow-y-auto">
             {/* Patient card */}
-            <div className="p-3 md:p-4 border-r border-slate-100 md:border-r-0 md:border-b">
+            <div className="p-3 md:p-4 border-r border-slate-100 dark:border-slate-700 md:border-r-0 md:border-b">
               <div className="flex items-center gap-3 mb-3">
-                <div className="hidden md:flex w-10 h-10 rounded-full bg-blue-100 items-center justify-center shrink-0">
-                  <User className="h-5 w-5 text-blue-600" />
+                <div className="hidden md:flex w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 items-center justify-center shrink-0">
+                  <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-slate-900 leading-tight">{patient.first_name} {patient.last_name}</p>
-                  <p className="text-xs text-slate-500">DOB: {new Date(patient.date_of_birth + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
+                  <p className="font-bold text-slate-900 dark:text-white leading-tight">{patient.first_name} {patient.last_name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">DOB: {new Date(patient.date_of_birth + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
                   <p className="text-xs text-slate-400">ID: {patient.patient_id}</p>
                 </div>
               </div>
             </div>
 
             {/* Medication card */}
-            <div className="p-3 md:p-4 md:border-b border-slate-100">
+            <div className="p-3 md:p-4 md:border-b border-slate-100 dark:border-slate-700">
               <div className="flex items-center gap-2 mb-2">
                 <Pill className="h-4 w-4 text-purple-500 shrink-0" />
-                <p className="font-bold text-slate-900 text-sm">{medication.name}</p>
+                <p className="font-bold text-slate-900 dark:text-white text-sm">{medication.name}</p>
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-slate-500">Label strength</span>
-                  <span className="font-semibold text-slate-800">{medication.dosage}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Label strength</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">{medication.dosage}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-slate-500">Route</span>
-                  <span className="font-semibold text-slate-800">{medication.route}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Route</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">{medication.route}</span>
                 </div>
                 {medication.admin_time && (
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="text-slate-500">Time</span>
-                    <span className="font-semibold text-slate-800">{medication.admin_time}</span>
+                    <span className="text-slate-500 dark:text-slate-400">Time</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-100">{medication.admin_time}</span>
                   </div>
                 )}
               </div>
@@ -463,7 +463,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                   { label: 'Student signed', done: !!studentName.trim(), id: studentName.trim() },
                 ].map((item) => (
                   <div key={item.label} className={`flex items-center gap-2 p-2 rounded-lg text-xs transition-colors ${
-                    item.done ? 'bg-green-50 text-green-800' : 'bg-slate-50 text-slate-500'
+                    item.done ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400'
                   }`}>
                     <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                       item.done ? 'bg-green-500' : 'bg-slate-300'
@@ -472,7 +472,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium truncate">{item.label}</p>
-                      {item.done && item.id && <p className="text-green-600 font-mono truncate">{item.id}</p>}
+                      {item.done && item.id && <p className="text-green-600 dark:text-green-400 font-mono truncate">{item.id}</p>}
                     </div>
                   </div>
                 ))}
@@ -480,9 +480,9 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
             </div>
 
             {/* Reset / Cancel footer */}
-            <div className="col-span-2 px-3 pb-3 md:p-4 md:border-t border-slate-100 flex gap-2">
-              <button onClick={resetProcess} className="flex-1 py-1.5 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Reset</button>
-              <button onClick={onCancel}    className="flex-1 py-1.5 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+            <div className="col-span-2 px-3 pb-3 md:p-4 md:border-t border-slate-100 dark:border-slate-700 flex gap-2">
+              <button onClick={resetProcess} className="flex-1 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Reset</button>
+              <button onClick={onCancel}    className="flex-1 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Cancel</button>
             </div>
           </div>
           )}
@@ -492,7 +492,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
             {/* Reference barcodes panel */}
             {showBarcodes && (
-              <div className="p-4 bg-slate-100 border-b border-slate-200">
+              <div className="p-4 bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-700">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                   <BarcodeGenerator data={bcmaService.generatePatientBarcode(patient)} type="patient" label={`${patient.first_name} ${patient.last_name}`} />
                   <BarcodeGenerator data={bcmaService.generateMedicationBarcode(medication)} type="medication" label={medication.name} />
@@ -509,17 +509,17 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
             {/* ── SCAN PATIENT ── */}
             {currentStep === 'scan-patient' && (
               <div className="flex flex-col items-center justify-center h-full p-6 sm:p-10 text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-blue-100 flex items-center justify-center mb-5">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mb-5">
                   <User className="h-10 w-10 text-blue-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">Scan Patient Wristband</h2>
-                <p className="text-slate-500 mb-6">Point scanner at <span className="font-semibold text-slate-700">{patient.first_name} {patient.last_name}</span>'s wristband</p>
-                <div className="w-full max-w-xs bg-blue-50 border-2 border-dashed border-blue-300 rounded-xl p-5 mb-6">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Scan Patient Wristband</h2>
+                <p className="text-slate-500 dark:text-slate-400 mb-6">Point scanner at <span className="font-semibold text-slate-700 dark:text-slate-300">{patient.first_name} {patient.last_name}</span>'s wristband</p>
+                <div className="w-full max-w-xs bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-5 mb-6">
                   <p className="text-xs text-blue-500 font-medium uppercase tracking-wider mb-1">Expected ID</p>
-                  <p className="text-lg font-mono font-bold text-blue-800">{patient.patient_id}</p>
+                  <p className="text-lg font-mono font-bold text-blue-800 dark:text-blue-200">{patient.patient_id}</p>
                 </div>
                 <button onClick={() => { const v = prompt('Enter patient barcode:'); if (v) handleBarcodeScanned(v); }}
-                  className="px-5 py-2 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors">
+                  className="px-5 py-2 text-sm text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
                   Enter Manually
                 </button>
               </div>
@@ -528,20 +528,20 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
             {/* ── SCAN MEDICATION ── */}
             {currentStep === 'scan-medication' && (
               <div className="flex flex-col items-center justify-center h-full p-6 sm:p-10 text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-100 flex items-center justify-center mb-5">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mb-5">
                   <Pill className="h-10 w-10 text-purple-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-1">Scan Medication Barcode</h2>
-                <p className="text-slate-500 mb-6">Point scanner at the <span className="font-semibold text-slate-700">{medication.name}</span> package</p>
-                <div className="w-full max-w-xs bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-left">
-                  <div className="flex items-center gap-2 text-green-700 text-sm mb-1">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Scan Medication Barcode</h2>
+                <p className="text-slate-500 dark:text-slate-400 mb-6">Point scanner at the <span className="font-semibold text-slate-700 dark:text-slate-300">{medication.name}</span> package</p>
+                <div className="w-full max-w-xs bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-6 text-left">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-300 text-sm mb-1">
                     <Check className="h-4 w-4" />
                     <span className="font-medium">Patient verified: {scannedPatientId}</span>
                   </div>
-                  <p className="text-xs text-green-600 pl-6">Now scan the medication package</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 pl-6">Now scan the medication package</p>
                 </div>
                 <button onClick={() => { const v = prompt('Enter medication barcode:'); if (v) handleBarcodeScanned(v); }}
-                  className="px-5 py-2 text-sm text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50 transition-colors">
+                  className="px-5 py-2 text-sm text-purple-600 dark:text-purple-400 border border-purple-300 dark:border-purple-700 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
                   Enter Manually
                 </button>
               </div>
@@ -553,7 +553,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
                 {/* Verification status */}
                 <div className={`col-span-full flex items-center gap-3 p-3 rounded-xl border ${
-                  validationResult.isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                  validationResult.isValid ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                 }`}>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     validationResult.isValid ? 'bg-green-500' : 'bg-red-500'
@@ -561,7 +561,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                     {validationResult.isValid ? <Check className="h-4 w-4 text-white" /> : <X className="h-4 w-4 text-white" />}
                   </div>
                   <div className="flex-1">
-                    <p className={`font-semibold text-sm ${validationResult.isValid ? 'text-green-800' : 'text-red-800'}`}>
+                    <p className={`font-semibold text-sm ${validationResult.isValid ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
                       {validationResult.isValid ? '5 Rights Verified — Ready to administer' : 'Verification issues detected'}
                     </p>
                   </div>
@@ -575,17 +575,17 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
                 {/* Dose field — IV, IM, SC routes only */}
                 {requiresDrawnUpDose && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-4">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  <div className="bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                       Medication Drawn Up / Administered <span className="text-red-500">*</span>
                     </label>
-                    <p className="text-xs text-slate-400 mb-2">Label strength: <span className="font-semibold text-slate-600">{medication.dosage}</span></p>
+                    <p className="text-xs text-slate-400 mb-2">Label strength: <span className="font-semibold text-slate-600 dark:text-slate-400">{medication.dosage}</span></p>
                     <input
                       type="text"
                       value={administeredDose}
                       onChange={(e) => setAdministeredDose(e.target.value)}
                       className={`w-full px-3 py-2.5 text-base font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                        administeredDose.trim() ? 'border-green-400 bg-green-50 focus:ring-green-400' : 'border-orange-300 bg-orange-50 focus:ring-orange-400'
+                        administeredDose.trim() ? 'border-green-400 bg-green-50 dark:bg-green-900/20 focus:ring-green-400' : 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 focus:ring-orange-400'
                       }`}
                       placeholder="mls or units drawn up"
                     />
@@ -599,11 +599,11 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
                 {/* Glucose or Notes fills the other column (full-width when dose field is hidden) */}
                 {requiresGlucoseReading ? (
-                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!hasDoseField ? 'sm:col-span-2' : ''}`}>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  <div className={`bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 ${!hasDoseField ? 'sm:col-span-2' : ''}`}>
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
                       Blood Glucose <span className="text-red-500">*</span>
                     </label>
-                    <p className="text-xs text-slate-400 mb-2">Range: <span className="font-semibold text-slate-600">1 – 35 mmol/L</span></p>
+                    <p className="text-xs text-slate-400 mb-2">Range: <span className="font-semibold text-slate-600 dark:text-slate-400">1 – 35 mmol/L</span></p>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
@@ -620,29 +620,29 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                         placeholder="e.g. 5.5"
                         className={`flex-1 px-3 py-2.5 text-base font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                           glucoseReading && parseFloat(glucoseReading) >= 1 && parseFloat(glucoseReading) <= 35
-                            ? 'border-green-400 bg-green-50 focus:ring-green-400'
+                            ? 'border-green-400 bg-green-50 dark:bg-green-900/20 focus:ring-green-400'
                             : glucoseReading
-                            ? 'border-red-400 bg-red-50 focus:ring-red-400'
-                            : 'border-orange-300 bg-orange-50 focus:ring-orange-400'
+                            ? 'border-red-400 bg-red-50 dark:bg-red-900/20 focus:ring-red-400'
+                            : 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 focus:ring-orange-400'
                         }`}
                       />
-                      <span className="text-sm font-semibold text-slate-500 shrink-0">mmol/L</span>
+                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 shrink-0">mmol/L</span>
                     </div>
                     {glucoseReading && !(parseFloat(glucoseReading) >= 1 && parseFloat(glucoseReading) <= 35) ? (
                       <p className="text-xs text-red-500 mt-1.5">Value must be between 1 and 35 mmol/L</p>
                     ) : glucoseTimestamp ? (
-                      <p className="text-xs text-green-600 mt-1.5">✓ Recorded at {new Date(glucoseTimestamp).toLocaleTimeString()}</p>
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1.5">✓ Recorded at {new Date(glucoseTimestamp).toLocaleTimeString()}</p>
                     ) : (
                       <p className="text-xs text-blue-500 mt-1.5">💡 Tip: Check patient's glucometer before administering</p>
                     )}
                   </div>
                 ) : (
-                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!hasDoseField ? 'sm:col-span-2' : ''}`}>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Notes (Optional)</label>
+                  <div className={`bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 ${!hasDoseField ? 'sm:col-span-2' : ''}`}>
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Notes (Optional)</label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
                       rows={3}
                       placeholder="Administration notes..."
                     />
@@ -653,12 +653,12 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 {slidingScale && <SlidingScaleTable scale={slidingScale} glucose={glucoseValue} />}
 
                 {requiresGlucoseReading && (
-                  <div className="col-span-full bg-white rounded-xl border border-slate-200 p-4">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Notes (Optional)</label>
+                  <div className="col-span-full bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                    <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Notes (Optional)</label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+                      className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
                       rows={2}
                       placeholder="Administration notes..."
                     />
@@ -667,21 +667,21 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
                 {/* ── Sign & Submit ── full width */}
                 {submissionError && (
-                  <div className="col-span-full rounded-xl border-2 border-red-400 bg-red-50 p-4 flex items-start gap-3">
-                    <X className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                  <div className="col-span-full rounded-xl border-2 border-red-400 bg-red-50 dark:bg-red-900/20 p-4 flex items-start gap-3">
+                    <X className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-bold text-red-800">Could not save administration</p>
-                      <p className="text-sm text-red-700 mt-0.5">{submissionError}</p>
-                      <p className="text-xs text-red-600 mt-1">Ask your instructor to check your access to this simulation, then try again.</p>
+                      <p className="text-sm font-bold text-red-800 dark:text-red-200">Could not save administration</p>
+                      <p className="text-sm text-red-700 dark:text-red-300 mt-0.5">{submissionError}</p>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">Ask your instructor to check your access to this simulation, then try again.</p>
                     </div>
                   </div>
                 )}
                 <div className={`col-span-full rounded-xl border-2 p-4 transition-all duration-300 ${
-                  allReady ? 'bg-green-50 border-green-400 shadow-md' : 'bg-white border-slate-200'
+                  allReady ? 'bg-green-50 dark:bg-green-900/20 border-green-400 shadow-md' : 'bg-white dark:bg-gray-800 border-slate-200 dark:border-slate-700'
                 }`}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                     <div className="flex-1">
-                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                      <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                         Student Sign-off <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -690,8 +690,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                         onChange={(e) => setStudentName(e.target.value)}
                         className={`w-full px-4 py-2.5 text-base border-2 rounded-xl focus:outline-none focus:ring-2 transition-colors ${
                           studentName.trim()
-                            ? 'border-green-400 bg-white focus:ring-green-300'
-                            : 'border-yellow-300 bg-yellow-50 focus:ring-yellow-500 focus:border-yellow-500'
+                            ? 'border-green-400 bg-white dark:bg-gray-800 focus:ring-green-300'
+                            : 'border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 focus:ring-yellow-500 focus:border-yellow-500'
                         }`}
                         placeholder="Your full name — required to save"
                       />
@@ -703,7 +703,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                       className={`shrink-0 w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-base font-bold transition-all duration-200 ${
                         allReady
                           ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl active:scale-[0.98]'
-                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                          : 'bg-slate-200 dark:bg-slate-600 text-slate-400 cursor-not-allowed'
                       }`}
                     >
                       <span className="flex items-center justify-center gap-2">
@@ -732,53 +732,53 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
             {currentStep === 'complete' && (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 {/* Success icon */}
-                <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-4">
                   <CheckCircle className="h-10 w-10 text-green-500" />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Medication Administration Recorded</h2>
-                <p className="text-slate-500 mb-6 text-sm">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-1">Medication Administration Recorded</h2>
+                <p className="text-slate-500 dark:text-slate-400 mb-6 text-sm">
                   This administration has been saved and will appear in the debrief report.
                 </p>
 
                 {/* Summary card */}
-                <div className="w-full max-w-sm bg-white border border-slate-200 rounded-xl overflow-hidden text-left mb-6 shadow-sm">
+                <div className="w-full max-w-sm bg-white dark:bg-gray-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden text-left mb-6 shadow-sm">
                   <div className="bg-green-600 px-4 py-2.5">
                     <p className="text-white text-xs font-semibold uppercase tracking-wider">Administration Summary</p>
                   </div>
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-700">
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                      <span className="text-slate-500">Patient</span>
-                      <span className="font-semibold text-slate-800">{patient.first_name} {patient.last_name}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Patient</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{patient.first_name} {patient.last_name}</span>
                     </div>
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                      <span className="text-slate-500">Medication</span>
-                      <span className="font-semibold text-slate-800">{medication.name}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Medication</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{medication.name}</span>
                     </div>
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                      <span className="text-slate-500">Label strength</span>
-                      <span className="font-semibold text-slate-800">{medication.dosage}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Label strength</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{medication.dosage}</span>
                     </div>
                     {recordedDose && (
                       <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                        <span className="text-slate-500">{requiresTabletCount ? 'Given' : 'Drawn up'}</span>
-                        <span className="font-semibold text-blue-700">{recordedDose}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{requiresTabletCount ? 'Given' : 'Drawn up'}</span>
+                        <span className="font-semibold text-blue-700 dark:text-blue-300">{recordedDose}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                      <span className="text-slate-500">Route</span>
-                      <span className="font-semibold text-slate-800">{medication.route}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Route</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{medication.route}</span>
                     </div>
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                      <span className="text-slate-500">Administered by</span>
-                      <span className="font-semibold text-slate-800">{studentName}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Administered by</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{studentName}</span>
                     </div>
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                      <span className="text-slate-500">Time</span>
-                      <span className="font-semibold text-slate-800">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-slate-500 dark:text-slate-400">Time</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     <div className="flex justify-between items-center px-4 py-2.5 text-sm">
-                      <span className="text-slate-500">BCMA</span>
-                      <span className={`font-semibold ${overriddenChecks.length === 0 ? 'text-green-600' : 'text-amber-600'}`}>
+                      <span className="text-slate-500 dark:text-slate-400">BCMA</span>
+                      <span className={`font-semibold ${overriddenChecks.length === 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
                         {overriddenChecks.length === 0 ? '✓ Compliant' : '⚠ Override Applied'}
                       </span>
                     </div>
@@ -800,36 +800,36 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
       {/* ── Override Modal ── */}
       {showOverrideModal && (
         <div className="fixed inset-0 bg-black bg-opacity-75 z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Override Verification</h3>
-                <button onClick={() => setShowOverrideModal(false)} className="text-gray-400 hover:text-gray-600">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Override Verification</h3>
+                <button onClick={() => setShowOverrideModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                   <X className="h-6 w-6" />
                 </button>
               </div>
             </div>
             <div className="p-6 space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="font-medium text-red-800 mb-2">Failed Verification Checks:</h4>
-                <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <h4 className="font-medium text-red-800 dark:text-red-200 mb-2">Failed Verification Checks:</h4>
+                <ul className="list-disc list-inside text-sm text-red-700 dark:text-red-300 space-y-1">
                   {getFailedChecks().map((check) => (
                     <li key={check}><span className="font-medium capitalize">Right {check}:</span> {getCheckDescription(check)}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Override <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reason for Override <span className="text-red-500">*</span></label>
                 <textarea value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   rows={4} placeholder="Explain why this verification is being overridden..." required />
               </div>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-sm text-yellow-800"><strong>Warning:</strong> This action will be logged for audit purposes.</p>
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200"><strong>Warning:</strong> This action will be logged for audit purposes.</p>
               </div>
             </div>
             <div className="flex space-x-3 p-6 pt-0">
-              <button onClick={() => setShowOverrideModal(false)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Cancel</button>
+              <button onClick={() => setShowOverrideModal(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
               <button onClick={handleOverride} className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium">Apply Override</button>
             </div>
           </div>

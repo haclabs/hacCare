@@ -8,7 +8,6 @@ documented in this file.
 
 ===============================================================================
 [Unreleased] - 2026-11-05 - HOME-SCREEN APP ICON
-===============================================================================
 
 * Adding hacCare (or Echo) to a phone or tablet home screen now shows a
   proper square hacCare icon and opens full-screen like an app, starting at
@@ -16,6 +15,16 @@ documented in this file.
   squashed the wide wordmark logo
 * New browser tab icons (favicon), and the mobile browser bar colour now
   matches the icon
+[Unreleased] - 2026-11-05 - DARK MODE FOR THE MAR AND BCMA
+
+* The MAR, medication forms, BBIT chart, medication history and the BCMA
+  scan dialog now follow dark mode. Before, they stayed white on a dark page
+  with grey text that was hard to read (most visible on phones set to dark
+  mode, which hacCare follows on first visit)
+* The hacCare logo in the Echo header now uses its light lettering in dark
+  mode
+* Fixed the MAR category icons and count badges, whose colours were built
+  at runtime and so were missing from the stylesheet
 
 ===============================================================================
 [Unreleased] - 2026-11-05 - ECHO ON PHONES: CAMERA SCANNING + PHONE LAYOUT
