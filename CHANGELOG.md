@@ -7,6 +7,24 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-05 - ROVER ON PHONES: CAMERA SCANNING + PHONE LAYOUT
+===============================================================================
+
+* Rover mode now works on phones and tablets without a scanner: tap the
+  Camera button (or "Scan with camera" on the wristband screen) and hold the
+  wristband or medication code inside the on-screen square. Works on iPhone
+  and Android over HTTPS; the browser asks for camera permission once
+* Rover is laid out for phones: medication rows stack with a full-width
+  Administer button, the BCMA check fills the screen as one scrolling
+  column, simulation cards keep the Enter button on screen, and the
+  simulation name gets its own line under the header. Tablet and desktop
+  layouts are unchanged (same MAR and BCMA components)
+* Site headers now allow the camera on our own pages (it was switched off
+  everywhere) so the Rover camera can work
+* Removed the unused patients/components/BarcodeScanner.tsx, a camera
+  preview that never actually read barcodes
+
+===============================================================================
 [Unreleased] - 2026-11-04 - NEW: ROVER MODE FOR BEDSIDE TABLETS
 ===============================================================================
 

@@ -11,7 +11,7 @@ export const SlidingScaleTable: React.FC<SlidingScaleTableProps> = ({ scale, glu
   const matched = glucose === null ? -1 : findScaleRowIndex(scale, glucose);
 
   return (
-    <div className="col-span-2 bg-white rounded-xl border border-orange-200 p-4">
+    <div className="col-span-full bg-white rounded-xl border border-orange-200 p-4">
       <label className="block text-xs font-semibold text-orange-700 uppercase tracking-wider mb-2">Sliding Scale</label>
       <table className="w-full text-sm">
         <thead>

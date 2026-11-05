@@ -354,14 +354,13 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
     : null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3">
-      {/* ── Wide modal shell ── */}
-      <div className="bg-slate-50 rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden"
-           style={{ maxHeight: '95vh' }}>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-stretch justify-center sm:items-center sm:p-3">
+      {/* ── Wide modal shell (full screen on phones) ── */}
+      <div className="bg-slate-50 sm:rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden h-[100dvh] sm:h-auto sm:max-h-[95vh]">
 
         {/* ── Dark header bar ── */}
-        <div className="bg-slate-800 text-white px-6 py-4 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-4">
+        <div className="bg-slate-800 text-white px-3 py-3 sm:px-6 sm:py-4 flex items-center justify-between gap-2 shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
             {practiceMode && (
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white">
                 PRACTICE MODE
@@ -374,7 +373,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 const labels = ['Patient','Medication','Verify','Done'];
                 return (
                   <React.Fragment key={s}>
-                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                    <div className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold transition-all ${
                       status === 'current'   ? 'bg-blue-500 text-white' :
                       status === 'completed' ? 'bg-green-500 text-white' :
                                               'bg-slate-600 text-slate-400'
@@ -382,40 +381,40 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                       {status === 'completed' && <Check className="h-3 w-3" />}
                       {labels[i]}
                     </div>
-                    {i < 3 && <div className={`w-5 h-px ${status === 'completed' ? 'bg-green-400' : 'bg-slate-600'}`} />}
+                    {i < 3 && <div className={`hidden sm:block w-5 h-px ${status === 'completed' ? 'bg-green-400' : 'bg-slate-600'}`} />}
                   </React.Fragment>
                 );
               })}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-3">
             <button
               onClick={() => setShowBarcodes(!showBarcodes)}
-              className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+              className="p-2 sm:p-1.5 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
               title="Reference barcodes"
             >
               <QrCode className="h-4 w-4" />
             </button>
-            <button onClick={onCancel} className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white transition-colors">
-              <X className="h-4 w-4" />
+            <button onClick={onCancel} aria-label="Cancel" className="p-2 sm:p-1.5 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white transition-colors">
+              <X className="h-5 w-5 sm:h-4 sm:w-4" />
             </button>
           </div>
         </div>
 
-        {/* ── Body: two columns ── */}
-        <div className="flex flex-1 overflow-hidden">
+        {/* ── Body: two columns; one scrolling column on phones ── */}
+        <div className="flex flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
 
           {/* LEFT — patient + medication context (hidden on complete step) */}
           {currentStep !== 'complete' && (
-          <div className="w-72 shrink-0 bg-white border-r border-slate-200 flex flex-col overflow-y-auto">
+          <div className="shrink-0 bg-white border-b border-slate-200 grid grid-cols-2 md:w-72 md:border-b-0 md:border-r md:flex md:flex-col md:overflow-y-auto">
             {/* Patient card */}
-            <div className="p-4 border-b border-slate-100">
+            <div className="p-3 md:p-4 border-r border-slate-100 md:border-r-0 md:border-b">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <div className="hidden md:flex w-10 h-10 rounded-full bg-blue-100 items-center justify-center shrink-0">
                   <User className="h-5 w-5 text-blue-600" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-bold text-slate-900 leading-tight">{patient.first_name} {patient.last_name}</p>
                   <p className="text-xs text-slate-500">DOB: {new Date(patient.date_of_birth + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</p>
                   <p className="text-xs text-slate-400">ID: {patient.patient_id}</p>
@@ -424,7 +423,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
             </div>
 
             {/* Medication card */}
-            <div className="p-4 border-b border-slate-100">
+            <div className="p-3 md:p-4 md:border-b border-slate-100">
               <div className="flex items-center gap-2 mb-2">
                 <Pill className="h-4 w-4 text-purple-500 shrink-0" />
                 <p className="font-bold text-slate-900 text-sm">{medication.name}</p>
@@ -452,8 +451,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
               )}
             </div>
 
-            {/* Checklist — scan steps */}
-            <div className="p-4 flex-1">
+            {/* Checklist — scan steps (phones follow the step pills instead) */}
+            <div className="hidden md:block p-4 flex-1">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Scan checklist</p>
               <div className="space-y-2">
                 {[
@@ -481,7 +480,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
             </div>
 
             {/* Reset / Cancel footer */}
-            <div className="p-4 border-t border-slate-100 flex gap-2">
+            <div className="col-span-2 px-3 pb-3 md:p-4 md:border-t border-slate-100 flex gap-2">
               <button onClick={resetProcess} className="flex-1 py-1.5 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Reset</button>
               <button onClick={onCancel}    className="flex-1 py-1.5 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
             </div>
@@ -489,12 +488,12 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
           )}
 
           {/* RIGHT — main workflow area */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="pb-24 md:pb-0 md:flex-1 md:overflow-y-auto">
 
             {/* Reference barcodes panel */}
             {showBarcodes && (
               <div className="p-4 bg-slate-100 border-b border-slate-200">
-                <div className="grid grid-cols-2 gap-4 mb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                   <BarcodeGenerator data={bcmaService.generatePatientBarcode(patient)} type="patient" label={`${patient.first_name} ${patient.last_name}`} />
                   <BarcodeGenerator data={bcmaService.generateMedicationBarcode(medication)} type="medication" label={medication.name} />
                 </div>
@@ -509,8 +508,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
             {/* ── SCAN PATIENT ── */}
             {currentStep === 'scan-patient' && (
-              <div className="flex flex-col items-center justify-center h-full p-10 text-center">
-                <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-5">
+              <div className="flex flex-col items-center justify-center h-full p-6 sm:p-10 text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-blue-100 flex items-center justify-center mb-5">
                   <User className="h-10 w-10 text-blue-500" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-900 mb-1">Scan Patient Wristband</h2>
@@ -528,8 +527,8 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
             {/* ── SCAN MEDICATION ── */}
             {currentStep === 'scan-medication' && (
-              <div className="flex flex-col items-center justify-center h-full p-10 text-center">
-                <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center mb-5">
+              <div className="flex flex-col items-center justify-center h-full p-6 sm:p-10 text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-purple-100 flex items-center justify-center mb-5">
                   <Pill className="h-10 w-10 text-purple-500" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-900 mb-1">Scan Medication Barcode</h2>
@@ -550,10 +549,10 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
             {/* ── VERIFY ── */}
             {currentStep === 'verify' && validationResult && (
-              <div className="p-5 grid grid-cols-2 gap-4">
+              <div className="p-3 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
                 {/* Verification status */}
-                <div className={`col-span-2 flex items-center gap-3 p-3 rounded-xl border ${
+                <div className={`col-span-full flex items-center gap-3 p-3 rounded-xl border ${
                   validationResult.isValid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
                 }`}>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
@@ -600,7 +599,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
                 {/* Glucose or Notes fills the other column (full-width when dose field is hidden) */}
                 {requiresGlucoseReading ? (
-                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!hasDoseField ? 'col-span-2' : ''}`}>
+                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!hasDoseField ? 'sm:col-span-2' : ''}`}>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                       Blood Glucose <span className="text-red-500">*</span>
                     </label>
@@ -638,7 +637,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                     )}
                   </div>
                 ) : (
-                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!hasDoseField ? 'col-span-2' : ''}`}>
+                  <div className={`bg-white rounded-xl border border-slate-200 p-4 ${!hasDoseField ? 'sm:col-span-2' : ''}`}>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Notes (Optional)</label>
                     <textarea
                       value={notes}
@@ -654,7 +653,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 {slidingScale && <SlidingScaleTable scale={slidingScale} glucose={glucoseValue} />}
 
                 {requiresGlucoseReading && (
-                  <div className="col-span-2 bg-white rounded-xl border border-slate-200 p-4">
+                  <div className="col-span-full bg-white rounded-xl border border-slate-200 p-4">
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Notes (Optional)</label>
                     <textarea
                       value={notes}
@@ -668,7 +667,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
 
                 {/* ── Sign & Submit ── full width */}
                 {submissionError && (
-                  <div className="col-span-2 rounded-xl border-2 border-red-400 bg-red-50 p-4 flex items-start gap-3">
+                  <div className="col-span-full rounded-xl border-2 border-red-400 bg-red-50 p-4 flex items-start gap-3">
                     <X className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-bold text-red-800">Could not save administration</p>
@@ -677,10 +676,10 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                     </div>
                   </div>
                 )}
-                <div className={`col-span-2 rounded-xl border-2 p-4 transition-all duration-300 ${
+                <div className={`col-span-full rounded-xl border-2 p-4 transition-all duration-300 ${
                   allReady ? 'bg-green-50 border-green-400 shadow-md' : 'bg-white border-slate-200'
                 }`}>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                     <div className="flex-1">
                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
                         Student Sign-off <span className="text-red-500">*</span>
@@ -701,13 +700,13 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                     <button
                       onClick={handleAdministration}
                       disabled={!allReady}
-                      className={`shrink-0 px-8 py-2.5 rounded-xl text-base font-bold transition-all duration-200 ${
+                      className={`shrink-0 w-full sm:w-auto px-8 py-3 sm:py-2.5 rounded-xl text-base font-bold transition-all duration-200 ${
                         allReady
                           ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl active:scale-[0.98]'
                           : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                       }`}
                     >
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center justify-center gap-2">
                         {allReady ? (
                           <><CheckCircle className="h-5 w-5" /> Administer</>
                         ) : (
@@ -722,7 +721,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                     </button>
                   </div>
                   {!allReady && (
-                    <p className="text-xs text-slate-400 mt-1.5 text-right">All fields above must be completed before administering</p>
+                    <p className="text-xs text-slate-400 mt-1.5 sm:text-right">All fields above must be completed before administering</p>
                   )}
                 </div>
 
@@ -736,7 +735,7 @@ export const BCMAAdministration: React.FC<BCMAAdministrationProps> = ({
                 <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4">
                   <CheckCircle className="h-10 w-10 text-green-500" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-1">Medication Administration Recorded</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Medication Administration Recorded</h2>
                 <p className="text-slate-500 mb-6 text-sm">
                   This administration has been saved and will appear in the debrief report.
                 </p>

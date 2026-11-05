@@ -8,9 +8,10 @@ import { RoverHeader } from './RoverHeader';
 import { RoverSimulationList } from './RoverSimulationList';
 import { RoverScanPatient } from './RoverScanPatient';
 import { RoverPatientMAR } from './RoverPatientMAR';
+import { RoverCameraProvider } from './RoverCamera';
 
 /**
- * Rover — the bedside tablet shell. Deliberately limited: pick a simulation, scan a
+ * Rover — the bedside tablet (or phone) shell. Deliberately limited: pick a simulation, scan a
  * wristband, administer from the MAR. No sidebar and no other modules.
  */
 const RoverApp: React.FC = () => {
@@ -27,21 +28,24 @@ const RoverApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <RoverHeader />
-      <main>
+      {/* Bottom padding keeps the floating camera button off the last row */}
+      <main className={inSimulation ? 'pb-24' : undefined}>
         <ErrorBoundary>
           {initialLoad ? (
             <div className="flex justify-center py-24">
               <Loader2 className="h-10 w-10 animate-spin text-haccare-teal" />
             </div>
           ) : (
-            <Routes>
-              <Route index element={inSimulation ? <RoverScanPatient /> : <RoverSimulationList />} />
-              <Route
-                path="patient/:id"
-                element={inSimulation ? <RoverPatientMAR /> : <Navigate to={ROVER_PATH} replace />}
-              />
-              <Route path="*" element={<Navigate to={ROVER_PATH} replace />} />
-            </Routes>
+            <RoverCameraProvider showButton={inSimulation}>
+              <Routes>
+                <Route index element={inSimulation ? <RoverScanPatient /> : <RoverSimulationList />} />
+                <Route
+                  path="patient/:id"
+                  element={inSimulation ? <RoverPatientMAR /> : <Navigate to={ROVER_PATH} replace />}
+                />
+                <Route path="*" element={<Navigate to={ROVER_PATH} replace />} />
+              </Routes>
+            </RoverCameraProvider>
           )}
         </ErrorBoundary>
       </main>

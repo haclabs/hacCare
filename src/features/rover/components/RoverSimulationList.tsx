@@ -37,8 +37,8 @@ export const RoverSimulationList: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Select a simulation</h1>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Select a simulation</h1>
         <button
           onClick={() => refetch()}
           className="flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -72,11 +72,11 @@ export const RoverSimulationList: React.FC = () => {
                 key={assignment.id}
                 onClick={() => handleEnter(assignment)}
                 disabled={!!entering}
-                className="group flex w-full items-center justify-between gap-4 rounded-xl border-2 border-transparent bg-white dark:bg-gray-800 p-6 text-left shadow-md transition hover:border-haccare-teal hover:shadow-lg disabled:opacity-60"
+                className="group flex w-full items-center justify-between gap-3 sm:gap-4 rounded-xl border-2 border-transparent bg-white dark:bg-gray-800 p-4 sm:p-6 text-left shadow-md transition hover:border-haccare-teal hover:shadow-lg disabled:opacity-60"
               >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-3">
-                    <h2 className="truncate text-xl font-semibold text-gray-900 dark:text-white">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <h2 className="min-w-0 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                       {assignment.simulation.name}
                     </h2>
                     <span
@@ -94,7 +94,7 @@ export const RoverSimulationList: React.FC = () => {
                     {assignment.role}
                   </p>
                 </div>
-                <span className="flex shrink-0 items-center gap-2 rounded-lg bg-haccare-teal px-5 py-3 font-semibold text-white group-hover:bg-haccare-teal-dark">
+                <span className="flex shrink-0 items-center gap-2 rounded-lg bg-haccare-teal px-4 sm:px-5 py-3 font-semibold text-white group-hover:bg-haccare-teal-dark">
                   {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
                   Enter
                 </span>
