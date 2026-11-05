@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, BedDouble, ChevronRight, DoorOpen, Loader2, ScanLine } from 'lucide-react';
+import { AlertCircle, BedDouble, Camera, ChevronRight, DoorOpen, Loader2, ScanLine } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useMultiTenantPatients } from '../../patients/hooks/useMultiTenantPatients';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { ROVER_PATH } from '../roverMode';
 import { findPatientByWristband } from '../findPatientByWristband';
 import { useRoverScan } from '../hooks/useRoverScan';
+import { useRoverCamera } from './RoverCamera';
 
 /** In a simulation: scan a wristband (or tap a patient) to open that patient's MAR. */
 export const RoverScanPatient: React.FC = () => {
@@ -15,6 +16,7 @@ export const RoverScanPatient: React.FC = () => {
   const { patients = [], isLoading } = useMultiTenantPatients();
   const [scanError, setScanError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
+  const { cameraAvailable, openCamera } = useRoverCamera();
 
   useRoverScan((barcode) => {
     const patient = findPatientByWristband(barcode, patients);
@@ -42,12 +44,21 @@ export const RoverScanPatient: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <div className="rounded-2xl border-2 border-dashed border-haccare-teal bg-white dark:bg-gray-800 p-8 text-center shadow-sm">
+      <div className="rounded-2xl border-2 border-dashed border-haccare-teal bg-white dark:bg-gray-800 p-6 sm:p-8 text-center shadow-sm">
         <ScanLine className="mx-auto h-16 w-16 text-haccare-teal animate-pulse" />
-        <h1 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">Scan patient wristband</h1>
+        <h1 className="mt-4 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Scan patient wristband</h1>
         <p className="mt-2 text-gray-600 dark:text-gray-300">
           Point the scanner at the patient's wristband to open their MAR.
         </p>
+        {cameraAvailable && (
+          <button
+            onClick={openCamera}
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-haccare-teal px-6 py-4 text-lg font-semibold text-white hover:bg-haccare-teal-dark"
+          >
+            <Camera className="h-6 w-6" />
+            Scan with camera
+          </button>
+        )}
       </div>
 
       {scanError && (

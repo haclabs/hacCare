@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { findPatientByWristband } from './findPatientByWristband';
+import { describeCameraError, getScanWindowCrop, getScanWindowSize } from './cameraScanner';
 import { getPostLoginPath, isRoverHostname, isRoverMode, setRoverPreferred } from './roverMode';
 
 const patients = [
@@ -81,5 +82,36 @@ describe('rover mode', () => {
     stubWindow('example.org');
     expect(getPostLoginPath(false)).toBe('/app');
     expect(getPostLoginPath(true)).toBe('/app/simulation-portal');
+  });
+});
+
+describe('camera scan window', () => {
+  it('is 70% of the shorter screen side, capped at 360px', () => {
+    expect(getScanWindowSize(390, 844)).toBeCloseTo(273);
+    expect(getScanWindowSize(1024, 1366)).toBe(360);
+  });
+
+  it('crops the centre of a landscape frame shown on a portrait phone', () => {
+    // 1280x720 frame covering a 390x844 screen: scaled by 844/720, sides cut off
+    const crop = getScanWindowCrop(1280, 720, 390, 844);
+    expect(crop.size).toBeCloseTo(273 / (844 / 720));
+    expect(crop.x).toBeCloseTo((1280 - crop.size) / 2);
+    expect(crop.y).toBeCloseTo((720 - crop.size) / 2);
+  });
+
+  it('never crops more than the frame', () => {
+    const crop = getScanWindowCrop(200, 100, 2000, 2000);
+    expect(crop.size).toBeLessThanOrEqual(100);
+    expect(crop.y).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('describeCameraError', () => {
+  it('explains a blocked camera', () => {
+    expect(describeCameraError({ name: 'NotAllowedError' })).toMatch(/blocked/);
+  });
+
+  it('falls back to a generic message', () => {
+    expect(describeCameraError(new Error('x'))).toBe('The camera could not be started.');
   });
 });

@@ -149,10 +149,10 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
     const linkedOrder = medication.order_link_key ? ordersByKey?.get(medication.order_link_key) : undefined;
 
     return (
-      <div key={medication.id} className="p-6 hover:bg-gray-50 transition-colors">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3">
+      <div key={medication.id} className="p-4 md:p-6 hover:bg-gray-50 transition-colors">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0 md:flex-1">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
               <h4 className="text-lg font-medium text-gray-900">{medication.name}</h4>
               {category !== 'continuous' && (
                 <span
@@ -223,20 +223,20 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
             )}
           </div>
 
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="md:text-right">
+              <p className="text-sm font-medium text-gray-500 md:text-gray-900">
                 Prescribed by: {medication.prescribed_by}
               </p>
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onBCMAStart(patient, medication);
                 }}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-1 ${
+                className={`flex-1 justify-center px-4 py-3 md:flex-none md:py-2 rounded-lg font-medium transition-colors flex items-center space-x-1 ${
                   shouldAlert && isDue
                     ? 'bg-yellow-500 text-white hover:bg-yellow-600'
                     : category === 'prn'
@@ -303,13 +303,13 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
     <div className="space-y-6">
       {/* Category Filter Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap space-x-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex max-w-full gap-1 overflow-x-auto bg-gray-100 rounded-lg p-1 md:flex-wrap">
           {(['All', 'prn', 'scheduled', 'scheduled_diabetic', 'continuous', 'stat'] as const).map(
             (cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategoryFilter(cat)}
-                className={`px-4 py-2 rounded-md font-medium text-sm transition-colors flex items-center space-x-2 ${
+                className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-md font-medium text-sm transition-colors flex items-center space-x-2 ${
                   activeCategoryFilter === cat
                     ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
@@ -398,7 +398,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                   key={key}
                   className={`${info.bgColor} ${info.borderColor} border rounded-lg`}
                 >
-                  <div className="px-6 py-4 border-b border-gray-200">
+                  <div className="px-4 md:px-6 py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <IconComponent className={`h-5 w-5 text-${info.color}-600`} />
@@ -424,7 +424,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 md:px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">
               {activeCategoryFilter === 'prn'
                 ? 'PRN (As Needed)'

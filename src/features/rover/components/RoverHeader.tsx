@@ -30,7 +30,7 @@ export const RoverHeader: React.FC = () => {
 
   return (
     <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
-      <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4">
         <div className="flex items-center gap-3 min-w-0">
           <HacCareLogo size="22px" withBar />
           <span className="inline-flex items-center gap-1 rounded-full bg-haccare-teal/10 px-2.5 py-1 text-xs font-semibold text-haccare-teal">
@@ -38,13 +38,13 @@ export const RoverHeader: React.FC = () => {
             Rover
           </span>
           {inSimulation && (
-            <span className="truncate rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+            <span className="hidden sm:inline truncate rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
               {currentTenant?.name}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {userName && (
             <span className="hidden sm:block text-sm text-gray-600 dark:text-gray-300 truncate max-w-[12rem]">
               {userName}
@@ -62,13 +62,18 @@ export const RoverHeader: React.FC = () => {
           )}
           <button
             onClick={handleSwitchUser}
-            className="flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-red-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-red-700 sm:px-4"
           >
             <LogOut className="h-4 w-4" />
             Switch user
           </button>
         </div>
       </div>
+      {inSimulation && (
+        <p className="truncate border-t border-gray-100 dark:border-gray-700 bg-green-50 dark:bg-green-900/20 px-3 py-1.5 text-sm font-medium text-green-800 dark:text-green-300 sm:hidden">
+          {currentTenant?.name}
+        </p>
+      )}
     </header>
   );
 };

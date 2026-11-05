@@ -120,14 +120,12 @@ export const RoverPatientMAR: React.FC = () => {
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <MARModule
-          patient={activePatient}
-          medications={activePatient.medications || []}
-          onMedicationUpdate={handleMedicationUpdate}
-          currentUser={currentUser}
-        />
-      </div>
+      <MARModule
+        patient={activePatient}
+        medications={activePatient.medications || []}
+        onMedicationUpdate={handleMedicationUpdate}
+        currentUser={currentUser}
+      />
     </div>
   );
 };

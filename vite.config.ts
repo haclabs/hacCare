@@ -50,6 +50,10 @@ export default defineConfig({
             if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('@react-pdf')) {
               return 'vendor-pdf';
             }
+            // Camera barcode decoder - only loaded when the Rover camera opens
+            if (id.includes('barcode-detector') || id.includes('zxing-wasm')) {
+              return 'vendor-scanner';
+            }
             // TanStack Query - data fetching
             if (id.includes('@tanstack')) {
               return 'vendor-query';

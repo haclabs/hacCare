@@ -199,15 +199,15 @@ export const MARModule: React.FC<MARModuleProps> = ({
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-bold text-gray-900">Medication Administration Record</h2>
-              <div className="flex items-center gap-3">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">Medication Administration Record</h2>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <p className="text-gray-600">
                   Patient: {patient.first_name} {patient.last_name} ({patient.patient_id})
                 </p>
                 {patient.date_of_birth && (() => {
                   const ageInfo = calculatePreciseAge(patient.date_of_birth);
                   return (
-                    <span className="text-sm text-blue-600 font-medium px-3 py-1 bg-blue-50 rounded-full">
+                    <span className="whitespace-nowrap text-sm text-blue-600 font-medium px-3 py-1 bg-blue-50 rounded-full">
                       {ageBandLabels[ageInfo.ageBand]}
                     </span>
                   );
@@ -230,10 +230,10 @@ export const MARModule: React.FC<MARModuleProps> = ({
 
       {/* Tab bar — hidden in BBIT sub-view */}
       {activeView !== 'bbit' && (
-        <div className="flex border-b border-gray-200">
+        <div className="flex overflow-x-auto border-b border-gray-200">
           <button
             onClick={() => setActiveView('administration')}
-            className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+            className={`shrink-0 whitespace-nowrap px-3 md:px-5 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
               activeView === 'administration'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -244,7 +244,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
           </button>
           <button
             onClick={() => setActiveView('history')}
-            className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
+            className={`shrink-0 whitespace-nowrap px-3 md:px-5 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
               activeView === 'history'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -255,7 +255,7 @@ export const MARModule: React.FC<MARModuleProps> = ({
           </button>
           <button
             onClick={() => setActiveView('bbit')}
-            className="px-5 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1.5"
+            className="shrink-0 whitespace-nowrap px-3 md:px-5 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1.5"
           >
             <Droplets className="h-3.5 w-3.5" />
             BBIT Chart

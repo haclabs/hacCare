@@ -1,7 +1,7 @@
 # Rover Mode (Bedside Tablets)
 
-Rover mode turns a tablet with a built-in barcode scanner into a bedside medication
-rover, like the handhelds hospitals use for barcode medication administration. It uses
+Rover mode turns a tablet with a built-in barcode scanner, or any phone or tablet with a
+camera, into a bedside medication rover, like the handhelds hospitals use for barcode medication administration. It uses
 the same simulations, MAR and BCMA checks as the desktop app, with less on screen.
 
 ## Flow
@@ -43,6 +43,34 @@ The scanner must send scans as keyboard input ending in Enter (often called
 Wristband matching reuses `bcmaService.validatePatientBarcode`, so every wristband format
 the BCMA check accepts also works at the rover scan screen. Matches must be exact.
 
+## Camera scanning (phones and tablets without a scanner)
+
+Below the `md` breakpoint (768 px) the MAR rows stack with a full-width **Administer**
+button and the BCMA dialog goes full-screen as a single scrolling column (the side
+checklist is replaced by the step pills). These are responsive classes on the shared
+`MedicationAdministrationGrid`, `MARModule` and `BCMAAdministration`, so tablets and
+desktops keep their existing layout.
+
+Inside a simulation, a teal **Camera** button floats at the bottom right of every Rover
+screen, above the BCMA dialog too. The wristband screen also has a large **Scan with
+camera** button. Either one opens the back camera full-screen with a square window; the
+first code read inside the window closes the camera and counts as a scan. Codes outside
+the window are ignored, so a neighbouring label on a label sheet isn't picked up by mistake.
+
+A camera scan sends the same `barcodescanned` event as a scanner gun, so wristband lookup,
+the MAR and the BCMA checks handle it with no changes.
+
+- **Decoder:** the browser's built-in `BarcodeDetector` where available (Chrome on
+  Android), otherwise the `barcode-detector` ponyfill backed by `zxing-wasm` (Safari on
+  iOS). Reads QR and Code 128. The WASM file (~950 KB) is bundled and served from our own
+  domain, and it and the `vendor-scanner` chunk load only when the camera is first opened.
+- **Requirements:** HTTPS (Netlify provides it; plain `http://` on a LAN IP hides the
+  button) and camera permission, which the browser asks for once per device.
+  `public/_headers` sets `Permissions-Policy: camera=(self)` and allows
+  `'wasm-unsafe-eval'` in `script-src` for this.
+- **If the camera is blocked:** the scanner explains how to allow it in browser settings.
+  The patient list on the wristband screen still works without it.
+
 ## Netlify setup for rover.haccare.app
 
 1. **Netlify → Site → Domain management → Add a domain alias** → `rover.haccare.app`.
@@ -62,6 +90,8 @@ tenant would take that subdomain.
 
 - `src/features/rover/roverMode.ts`: host detection, device preference, post-login path
 - `src/features/rover/components/`: `RoverRoute` (providers), `RoverApp` (routes),
-  `RoverSimulationList`, `RoverScanPatient`, `RoverPatientMAR`, `RoverModeSuggestion`
+  `RoverSimulationList`, `RoverScanPatient`, `RoverPatientMAR`, `RoverModeSuggestion`,
+  `RoverCamera` (camera button + `useRoverCamera`), `RoverCameraScanner` (camera view)
+- `src/features/rover/cameraScanner.ts`: decoder loading and scan-window crop maths
 - `src/features/rover/findPatientByWristband.ts`: wristband → patient lookup (tested in
   `rover.test.ts`)
