@@ -43,11 +43,11 @@ export const CatalogMedicationPicker: React.FC<CatalogMedicationPickerProps> = (
 
   if (selected) {
     return (
-      <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-        <Package className="h-4 w-4 text-green-600 flex-shrink-0" />
+      <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+        <Package className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-green-800 truncate">{catalogDisplayName(selected)}</p>
-          <p className="text-xs text-green-600">
+          <p className="text-sm font-medium text-green-800 dark:text-green-200 truncate">{catalogDisplayName(selected)}</p>
+          <p className="text-xs text-green-600 dark:text-green-400">
             <span className="font-mono">{selected.barcode}</span>
             {' · '}{selected.strength}{' · '}{selected.formulation}
           </p>
@@ -55,7 +55,7 @@ export const CatalogMedicationPicker: React.FC<CatalogMedicationPickerProps> = (
         <button
           type="button"
           onClick={onClear}
-          className="flex-shrink-0 text-green-600 hover:text-green-800 p-1 rounded"
+          className="flex-shrink-0 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 p-1 rounded"
           title="Clear catalog selection (switch to free entry)"
         >
           <X className="h-4 w-4" />
@@ -75,13 +75,13 @@ export const CatalogMedicationPicker: React.FC<CatalogMedicationPickerProps> = (
           onFocus={() => setOpen(true)}
           placeholder={isLoading ? 'Loading catalog…' : 'Search catalog (optional)…'}
           disabled={isLoading}
-          className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-50 disabled:text-gray-400"
+          className="w-full pl-9 pr-8 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 disabled:bg-gray-50 disabled:text-gray-400"
         />
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
       </div>
 
       {open && !isLoading && filtered.length > 0 && (
-        <ul className="absolute z-20 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
+        <ul className="absolute z-20 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
           {filtered.map((entry) => (
             <li key={entry.id}>
               <button
@@ -92,14 +92,14 @@ export const CatalogMedicationPicker: React.FC<CatalogMedicationPickerProps> = (
                   setSearch('');
                   setOpen(false);
                 }}
-                className="w-full text-left px-3 py-2.5 hover:bg-blue-50 flex items-start gap-2 border-b border-gray-100 last:border-0"
+                className="w-full text-left px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-start gap-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
               >
-                <span className="inline-block bg-blue-100 text-blue-700 text-xs font-mono px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5">
+                <span className="inline-block bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-mono px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5">
                   {entry.barcode}
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-medium text-gray-900 truncate">{catalogDisplayName(entry)}</span>
-                  <span className="block text-xs text-gray-500">
+                  <span className="block text-sm font-medium text-gray-900 dark:text-white truncate">{catalogDisplayName(entry)}</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400">
                     {entry.strength} · {entry.formulation}
                   </span>
                 </span>
@@ -110,7 +110,7 @@ export const CatalogMedicationPicker: React.FC<CatalogMedicationPickerProps> = (
       )}
 
       {open && !isLoading && filtered.length === 0 && search.trim().length > 0 && (
-        <div className="absolute z-20 left-0 right-0 mt-1 p-3 bg-white border border-gray-200 rounded-lg shadow-lg text-sm text-gray-500">
+        <div className="absolute z-20 left-0 right-0 mt-1 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg text-sm text-gray-500 dark:text-gray-400">
           No catalog matches — enter manually below
         </div>
       )}

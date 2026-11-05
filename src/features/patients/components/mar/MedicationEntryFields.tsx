@@ -15,7 +15,7 @@ import {
 } from '../../utils/medicationFormOptions';
 
 const inputClass =
-  'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
+  'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
 
 /**
  * Catalog lookup, barcode, dose, route, frequency and schedule fields for one medication.
@@ -31,7 +31,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
   return (
     <>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Catalog Lookup</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Catalog Lookup</label>
         <CatalogMedicationPicker
           catalog={entry.catalog}
           selected={entry.selectedCatalog}
@@ -45,7 +45,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
       </div>
 
       <div>
-        <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+        <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           <Lock className="h-3.5 w-3.5 text-gray-400" />
           QR Barcode
         </label>
@@ -53,7 +53,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
           type="text"
           value={form.barcode ?? ''}
           readOnly
-          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-500 font-mono text-sm cursor-not-allowed select-all"
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-md text-gray-500 dark:text-gray-400 font-mono text-sm cursor-not-allowed select-all"
         />
         <p className="text-xs text-gray-400 mt-1">
           {form.catalog_id
@@ -63,7 +63,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Medication Name *</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Medication Name *</label>
         <input
           type="text"
           value={form.name}
@@ -83,7 +83,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
       {showNotInCatalogNote && !form.catalog_id && form.name.trim() && <NotInCatalogNote />}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category *</label>
         <select
           value={form.category}
           onChange={(e) => updateField('category', e.target.value)}
@@ -102,7 +102,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {entry.labelStrength ? 'Label strength (on MAR) *' : 'Dosage *'}
         </label>
         <input
@@ -114,11 +114,11 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
           placeholder={entry.labelStrength ? 'e.g., 25 mg (per tablet), 10 mg/mL' : 'e.g., 10mg, 5ml'}
         />
         {entry.labelStrength ? (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Strength printed on the package — students work out how much to give from the ordered dose
           </p>
         ) : entry.selectedCatalog && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Catalog product: {entry.selectedCatalog.strength} {entry.selectedCatalog.formulation} — enter
             the ordered dose
           </p>
@@ -126,7 +126,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Route *</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Route *</label>
         <select
           value={form.route}
           onChange={(e) => updateField('route', e.target.value)}
@@ -141,7 +141,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Frequency *</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frequency *</label>
         <select
           value={form.frequency}
           onChange={(e) => updateField('frequency', e.target.value)}
@@ -155,17 +155,17 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
         </select>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <label className="block text-sm font-medium text-blue-700 mb-3">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-3">
           ⏰ Administration {entry.isMultiTime ? 'Times' : 'Time'} *{' '}
-          {!entry.isMultiTime && <span className="text-gray-500 font-normal">(24-hour format)</span>}
+          {!entry.isMultiTime && <span className="text-gray-500 dark:text-gray-400 font-normal">(24-hour format)</span>}
         </label>
         {entry.isMultiTime ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {form.admin_times.map((time, i) => (
               <div key={i} className="space-y-1">
-                <label className="text-xs text-blue-600 font-medium">
-                  Time {i + 1} <span className="text-gray-500">(24h)</span>
+                <label className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                  Time {i + 1} <span className="text-gray-500 dark:text-gray-400">(24h)</span>
                 </label>
                 <TimeInput value={time} onChange={(v) => entry.updateAdminTime(i, v)} />
               </div>
@@ -174,14 +174,14 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
         ) : (
           <TimeInput value={form.admin_time} onChange={(v) => updateField('admin_time', v)} />
         )}
-        <p className="text-xs text-blue-600 mt-3 font-medium">
+        <p className="text-xs text-blue-600 dark:text-blue-400 mt-3 font-medium">
           🔔 Enter time in 24-hour format (e.g., 08:00, 14:30) • Used for alerts and BCMA validation
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date *</label>
           <input
             type="date"
             value={form.start_date}
@@ -191,7 +191,7 @@ export const MedicationEntryFields: React.FC<{ entry: MedicationEntryForm; showN
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End Date (Optional)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date (Optional)</label>
           <input
             type="date"
             value={form.end_date}

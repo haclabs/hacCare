@@ -77,23 +77,23 @@ export const TrainingBCMAPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-emerald-100 rounded-lg">
-            <GraduationCap className="h-6 w-6 text-emerald-600" />
+          <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg">
+            <GraduationCap className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">BCMA Med Training</h1>
-            <p className="text-sm text-gray-500">Practice sandbox — one medication of each type</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">BCMA Med Training</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Practice sandbox — one medication of each type</p>
           </div>
         </div>
         <button
           onClick={() => setShowWalkthrough(true)}
-          className="px-4 py-2 border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors text-sm font-medium"
+          className="px-4 py-2 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-sm font-medium"
         >
           How to Use This
         </button>
       </div>
 
-      <div className="flex items-start gap-2 p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-800">
+      <div className="flex items-start gap-2 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-800 dark:text-emerald-200">
         <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
         <p>
           This is a practice sandbox. Nothing you do here is ever saved, graded, or reset — administer any
@@ -104,9 +104,9 @@ export const TrainingBCMAPage: React.FC = () => {
       {isLoading ? (
         <div className="flex justify-center py-12"><LoadingSpinner /></div>
       ) : isError ? (
-        <div className="p-6 text-center text-gray-500">Failed to load training medications. Please try again later.</div>
+        <div className="p-6 text-center text-gray-500 dark:text-gray-400">Failed to load training medications. Please try again later.</div>
       ) : medications.length === 0 ? (
-        <div className="p-6 text-center text-gray-500">
+        <div className="p-6 text-center text-gray-500 dark:text-gray-400">
           No global catalog medications are set up yet. Ask an administrator to add entries to the Medication Catalog.
         </div>
       ) : (

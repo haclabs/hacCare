@@ -31,7 +31,7 @@ export function TimeInput({
         placeholder="HH:MM"
         maxLength={5}
         required
-        className="w-full px-3 py-2.5 pr-8 text-sm border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-mono"
+        className="w-full px-3 py-2.5 pr-8 text-sm border border-blue-300 dark:border-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 font-mono"
       />
       <select
         value={value}
