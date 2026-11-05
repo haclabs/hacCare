@@ -7,6 +7,17 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-05 - HOME-SCREEN APP ICON
+===============================================================================
+
+* Adding hacCare (or Echo) to a phone or tablet home screen now shows a
+  proper square hacCare icon and opens full-screen like an app, starting at
+  the sign-in/app page rather than the marketing page. Before, phones
+  squashed the wide wordmark logo
+* New browser tab icons (favicon), and the mobile browser bar colour now
+  matches the icon
+
+===============================================================================
 [Unreleased] - 2026-11-05 - ECHO ON PHONES: CAMERA SCANNING + PHONE LAYOUT
 ===============================================================================
 
