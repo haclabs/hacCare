@@ -4,25 +4,25 @@ import { AlertCircle, BedDouble, Camera, ChevronRight, DoorOpen, Loader2, ScanLi
 import { useTenant } from '../../../contexts/TenantContext';
 import { useMultiTenantPatients } from '../../patients/hooks/useMultiTenantPatients';
 import { secureLogger } from '../../../lib/security/secureLogger';
-import { ROVER_PATH } from '../roverMode';
+import { ECHO_PATH } from '../echoMode';
 import { findPatientByWristband } from '../findPatientByWristband';
-import { useRoverScan } from '../hooks/useRoverScan';
-import { useRoverCamera } from './RoverCamera';
+import { useEchoScan } from '../hooks/useEchoScan';
+import { useEchoCamera } from './EchoCamera';
 
 /** In a simulation: scan a wristband (or tap a patient) to open that patient's MAR. */
-export const RoverScanPatient: React.FC = () => {
+export const EchoScanPatient: React.FC = () => {
   const navigate = useNavigate();
   const { exitSimulationTenant } = useTenant();
   const { patients = [], isLoading } = useMultiTenantPatients();
   const [scanError, setScanError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
-  const { cameraAvailable, openCamera } = useRoverCamera();
+  const { cameraAvailable, openCamera } = useEchoCamera();
 
-  useRoverScan((barcode) => {
+  useEchoScan((barcode) => {
     const patient = findPatientByWristband(barcode, patients);
     if (patient) {
       setScanError(null);
-      navigate(`${ROVER_PATH}/patient/${patient.id}`);
+      navigate(`${ECHO_PATH}/patient/${patient.id}`);
     } else {
       setScanError(`Wristband "${barcode}" doesn't match a patient in this simulation.`);
     }
@@ -33,9 +33,9 @@ export const RoverScanPatient: React.FC = () => {
     try {
       await exitSimulationTenant();
     } catch (err) {
-      secureLogger.error('Rover: failed to leave simulation', err);
+      secureLogger.error('Echo: failed to leave simulation', err);
     }
-    window.location.assign(ROVER_PATH);
+    window.location.assign(ECHO_PATH);
   };
 
   const sortedPatients = [...patients].sort((a, b) =>
@@ -85,7 +85,7 @@ export const RoverScanPatient: React.FC = () => {
           {sortedPatients.map((patient) => (
             <li key={patient.id}>
               <button
-                onClick={() => navigate(`${ROVER_PATH}/patient/${patient.id}`)}
+                onClick={() => navigate(`${ECHO_PATH}/patient/${patient.id}`)}
                 className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 <span className="flex h-12 w-16 shrink-0 flex-col items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">

@@ -2,25 +2,25 @@ import React, { useState } from 'react';
 import { AlertCircle, ArrowRight, Loader2, RefreshCw, Users } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { secureLogger } from '../../../lib/security/secureLogger';
-import { ROVER_PATH } from '../roverMode';
-import { useRoverAssignments, type RoverAssignment } from '../hooks/useRoverAssignments';
+import { ECHO_PATH } from '../echoMode';
+import { useEchoAssignments, type EchoAssignment } from '../hooks/useEchoAssignments';
 
-/** Rover home: large tap targets for each simulation the user can enter. */
-export const RoverSimulationList: React.FC = () => {
+/** Echo home: large tap targets for each simulation the user can enter. */
+export const EchoSimulationList: React.FC = () => {
   const { enterSimulationTenant } = useTenant();
-  const { data: assignments = [], isLoading, error, refetch, isFetching } = useRoverAssignments();
+  const { data: assignments = [], isLoading, error, refetch, isFetching } = useEchoAssignments();
   const [entering, setEntering] = useState<string | null>(null);
   const [enterError, setEnterError] = useState<string | null>(null);
 
-  const handleEnter = async (assignment: RoverAssignment) => {
+  const handleEnter = async (assignment: EchoAssignment) => {
     setEntering(assignment.simulation.id);
     setEnterError(null);
     try {
       await enterSimulationTenant(assignment.simulation.tenant_id);
       // Full reload so every tenant-scoped context and cache starts clean in the simulation
-      window.location.assign(ROVER_PATH);
+      window.location.assign(ECHO_PATH);
     } catch (err) {
-      secureLogger.error('Rover: failed to enter simulation', err);
+      secureLogger.error('Echo: failed to enter simulation', err);
       setEnterError('Could not enter that simulation. Please try again.');
       setEntering(null);
     }

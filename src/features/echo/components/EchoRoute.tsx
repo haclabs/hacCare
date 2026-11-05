@@ -4,15 +4,15 @@ import { PatientProvider } from '../../../contexts/PatientContext';
 import { ProtectedRoute } from '../../../components/Auth/ProtectedRoute';
 import LoadingSpinner from '../../../components/UI/LoadingSpinner';
 
-const RoverApp = lazy(() => import('./RoverApp'));
+const EchoApp = lazy(() => import('./EchoApp'));
 
-/** Route element for /rover/* — same provider stack as /app/*, minus the desktop shell. */
-export const RoverRoute: React.FC = () => (
+/** Route element for /echo/* — same provider stack as /app/*, minus the desktop shell. */
+export const EchoRoute: React.FC = () => (
   <TenantProvider>
     <PatientProvider>
       <ProtectedRoute>
         <Suspense fallback={<LoadingSpinner />}>
-          <RoverApp />
+          <EchoApp />
         </Suspense>
       </ProtectedRoute>
     </PatientProvider>

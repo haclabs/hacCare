@@ -7,47 +7,50 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
-[Unreleased] - 2026-11-05 - ROVER ON PHONES: CAMERA SCANNING + PHONE LAYOUT
+[Unreleased] - 2026-11-05 - ECHO ON PHONES: CAMERA SCANNING + PHONE LAYOUT
 ===============================================================================
 
-* Rover mode now works on phones and tablets without a scanner: tap the
+* Echo mode now works on phones and tablets without a scanner: tap the
   Camera button (or "Scan with camera" on the wristband screen) and hold the
   wristband or medication code inside the on-screen square. Works on iPhone
   and Android over HTTPS; the browser asks for camera permission once
-* Rover is laid out for phones: medication rows stack with a full-width
+* Echo is laid out for phones: medication rows stack with a full-width
   Administer button, the BCMA check fills the screen as one scrolling
   column, simulation cards keep the Enter button on screen, and the
   simulation name gets its own line under the header. Tablet and desktop
   layouts are unchanged (same MAR and BCMA components)
+* Renamed Rover mode to Echo to avoid clashing with a commercial EMR product
+  name: the bedside view is now at /echo and echo.haccare.app (the old
+  /rover path and rover. subdomain no longer work)
 * Site headers now allow the camera on our own pages (it was switched off
-  everywhere) so the Rover camera can work
+  everywhere) so the Echo camera can work
 * Removed the unused patients/components/BarcodeScanner.tsx, a camera
   preview that never actually read barcodes
 
 ===============================================================================
-[Unreleased] - 2026-11-04 - NEW: ROVER MODE FOR BEDSIDE TABLETS
+[Unreleased] - 2026-11-04 - NEW: ECHO MODE FOR BEDSIDE TABLETS
 ===============================================================================
 
-* New Rover mode for handheld tablets with built-in barcode scanners, like the
-  rovers hospitals use at the bedside. It shows only three screens: pick a
+* New Echo mode for handheld tablets with built-in barcode scanners, like the
+  handhelds hospitals use at the bedside. It shows only three screens: pick a
   simulation, scan the patient's wristband, then that patient's MAR with the
   usual BCMA scanning. No sidebar and no other modules
-* The patient bar on the Rover MAR stays pinned while scrolling and always
+* The patient bar on the Echo MAR stays pinned while scrolling and always
   shows the patient's allergies (or "No known allergies")
 * Scanning another patient's wristband from the MAR jumps to that patient;
   scans are ignored while a BCMA check is open
-* Open it at /rover, or give tablets their own address: rover.haccare.app
-  always opens Rover mode and can't leave it. On the main site, touch-only
-  devices see a "Switch to Rover mode" banner; once used, the device returns
-  to Rover after each sign-in until someone taps "Full view"
-* Rover devices are shared, so signing in always starts at the simulation
+* Open it at /echo, or give tablets their own address: echo.haccare.app
+  always opens Echo mode and can't leave it. On the main site, touch-only
+  devices see a "Switch to Echo mode" banner; once used, the device returns
+  to Echo after each sign-in until someone taps "Full view"
+* Echo devices are shared, so signing in always starts at the simulation
   list, and the large "Switch user" button clears the previous user's
   simulation and cached patient data
-* See docs/features/bcma/ROVER_MODE.md for setup
+* See docs/features/bcma/ECHO_MODE.md for setup
 * BCMA now checks the wristband against the patient as soon as it is scanned.
   Before, any patient's wristband showed "Patient verified" and the mismatch
   only appeared after the medication scan (it was always blocked from being
-  recorded). Applies on desktop and Rover
+  recorded). Applies on desktop and Echo
 
 ===============================================================================
 [Unreleased] - 2026-11-03 - SECURITY: MINIMATCH AND ZOD ADVISORIES

@@ -9,7 +9,7 @@ import { HacCareLogo } from '../Layout/HacCareLogo';
 import { PrivacyNoticeModal } from './PrivacyNoticeModal';
 import { MFAChallenge } from './MFAChallenge';
 import { MFAEnrollment } from './MFAEnrollment';
-import { getPostLoginPath } from '../../features/rover/roverMode';
+import { getPostLoginPath } from '../../features/echo/echoMode';
 
 const doRedirect = (simulationOnly?: boolean) => {
   window.location.href = getPostLoginPath(simulationOnly);

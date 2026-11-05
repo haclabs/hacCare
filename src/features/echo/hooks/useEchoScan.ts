@@ -3,10 +3,10 @@ import { isBCMACurrentlyActive } from '../../../services/simulation/bcmaState';
 
 /**
  * Subscribe to scanner input (the global `barcodescanned` event fired by
- * lib/barcode/barcodeScanner for hardware scanners and by the Rover camera). Scans are ignored while a BCMA verification is open so the
+ * lib/barcode/barcodeScanner for hardware scanners and by the Echo camera). Scans are ignored while a BCMA verification is open so the
  * Five-Rights check keeps exclusive use of the scanner.
  */
-export function useRoverScan(onScan: (barcode: string) => void) {
+export function useEchoScan(onScan: (barcode: string) => void) {
   const handlerRef = useRef(onScan);
   useEffect(() => {
     handlerRef.current = onScan;

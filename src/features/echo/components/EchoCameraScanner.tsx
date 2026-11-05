@@ -5,7 +5,7 @@ import { describeCameraError, getCodeDetector, getScanWindowCrop, getScanWindowS
 
 const SCAN_INTERVAL_MS = 150;
 
-interface RoverCameraScannerProps {
+interface EchoCameraScannerProps {
   onDetected: (code: string) => void;
   onClose: () => void;
 }
@@ -21,7 +21,7 @@ function useViewportSize() {
 }
 
 /** Full-screen camera view with a square window; the first code read inside it is returned. */
-export const RoverCameraScanner: React.FC<RoverCameraScannerProps> = ({ onDetected, onClose }) => {
+export const EchoCameraScanner: React.FC<EchoCameraScannerProps> = ({ onDetected, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const onDetectedRef = useRef(onDetected);
   const viewport = useViewportSize();
@@ -43,7 +43,7 @@ export const RoverCameraScanner: React.FC<RoverCameraScannerProps> = ({ onDetect
 
     const fail = (message: string, err: unknown) => {
       if (stopped) return;
-      secureLogger.error('Rover camera scan failed', err);
+      secureLogger.error('Echo camera scan failed', err);
       setError(message);
       setStatus('error');
     };
@@ -90,7 +90,7 @@ export const RoverCameraScanner: React.FC<RoverCameraScannerProps> = ({ onDetect
                 return;
               }
             } catch (err) {
-              secureLogger.debug('Rover camera: frame decode failed', err);
+              secureLogger.debug('Echo camera: frame decode failed', err);
             }
           }
           timer = setTimeout(tick, SCAN_INTERVAL_MS);

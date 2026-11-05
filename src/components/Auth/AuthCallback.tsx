@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
-import { getPostLoginPath } from '../../features/rover/roverMode';
+import { getPostLoginPath } from '../../features/echo/echoMode';
 
 /**
  * OAuth Callback Handler
