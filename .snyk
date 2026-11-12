@@ -9,5 +9,14 @@ version: v1.25.0
 #         reason: Not exploitable in our usage pattern
 #         expires: 2026-12-31T00:00:00.000Z
 
-ignore: {}
+ignore:
+  SNYK-JS-FFLATE-22392372:
+    - '*':
+        reason: >-
+          No fixed fflate version exists (all >=0.4.8). The flaw is in unzipSync on a crafted
+          ZIP; fflate arrives only via jspdf and pdfkit/png-js, which use deflateSync/zlibSync
+          to compress PDF output. unzipSync is not in the production bundle and the app never
+          unzips user-supplied archives. Re-check when fflate ships a fix.
+        expires: 2027-02-12T00:00:00.000Z
+        created: 2026-11-12T00:00:00.000Z
 patch: {}
