@@ -1,6 +1,6 @@
 // @refresh reset
 import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
-import { User } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/api/supabase';
 import { parseAuthError } from '../../utils/authErrorParser';
 // authPersistence import removed — initializeAuth now uses a single getSession() call
@@ -18,6 +18,7 @@ interface AuthContextType {
   isOffline: boolean;                                   // Offline state indicator
   isAnonymous: boolean;                                 // Anonymous simulation user indicator
   signIn: (email: string, password: string) => Promise<{ error: any; profile?: UserProfile | null; accessToken?: string }>; // Sign in function
+  signInWithPasskey: () => Promise<{ error: unknown; profile?: UserProfile | null; accessToken?: string }>; // Passwordless sign in (still subject to MFA)
   signOut: () => Promise<void>;                        // Sign out function
   hasRole: (roles: string | string[]) => boolean;     // Role-based access control helper
   createProfile: () => Promise<void>;                 // Create user profile function
@@ -503,6 +504,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
+   * Loads the signed-in user's profile and publishes user/profile state.
+   * Shared by every interactive sign-in (password, passkey) because the
+   * onAuthStateChange listener deliberately skips the profile fetch on SIGNED_IN.
+   * Returns the profile and access token only when a profile was found.
+   */
+  const loadSignedInProfile = async (session: Session): Promise<{ profile?: UserProfile; accessToken?: string }> => {
+    // Bypass hanging Supabase client - use direct HTTP fetch with the access token
+    secureLogger.debug('📋 Using direct HTTP fetch to bypass Supabase client...');
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/rest/v1/user_profiles?id=eq.${session.user.id}&select=*`, {
+        method: 'GET',
+        headers: {
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        }
+      });
+      
+      secureLogger.debug('📡 Direct fetch response status:', response.status);
+      
+      if (response.ok) {
+        const profiles = await response.json();
+        secureLogger.debug('✅ Direct fetch successful, profiles:', profiles);
+        
+        if (profiles && profiles.length > 0) {
+          secureLogger.debug('✅ Profile found:', profiles[0]);
+          secureLogger.debug('👤 Profile role:', profiles[0].role, 'Is super_admin?', profiles[0].role === 'super_admin');
+          
+          // Use React 18's automatic batching - all state updates in same function are batched
+          setUser(session.user);
+          setProfile(profiles[0]);
+          
+          // Small delay to ensure state propagates to all consumers before clearing loading
+          setTimeout(() => {
+            setLoading(false);
+            secureLogger.debug('🏁 Loading cleared after state propagation');
+          }, 50);
+          
+          secureLogger.debug('🏁 User and profile state updated');
+          return { profile: profiles[0] as UserProfile, accessToken: session.access_token };
+        } else {
+          secureLogger.warn('⚠️ No profile found for user');
+          setUser(session.user);
+          setProfile(null);
+          setLoading(false);
+        }
+      } else {
+        const errorText = await response.text();
+        secureLogger.error('❌ Direct fetch failed:', response.status, errorText);
+        setUser(session.user);
+        setProfile(null);
+        setLoading(false);
+      }
+    } catch (fetchError) {
+      secureLogger.error('💥 Exception during direct fetch:', fetchError);
+      // Set user anyway so they can create profile
+      setUser(session.user);
+      setProfile(null);
+      setLoading(false);
+    }
+    return {};
+  };
+
+  /**
    * Sign in user with email and password
    * Handles authentication and provides detailed error feedback
    * Uses only Supabase auth - no localStorage manipulation
@@ -562,62 +629,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         secureLogger.debug('👤 User ID from signIn:', data.session.user.id);
         secureLogger.debug('🔑 Access Token:', data.session.access_token?.substring(0, 20) + '...');
         
-        // Bypass hanging Supabase client - use direct HTTP fetch with the access token
-        secureLogger.debug('📋 Using direct HTTP fetch to bypass Supabase client...');
-        try {
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-          const response = await fetch(`${supabaseUrl}/rest/v1/user_profiles?id=eq.${data.session.user.id}&select=*`, {
-            method: 'GET',
-            headers: {
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${data.session.access_token}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=representation'
-            }
-          });
-          
-          secureLogger.debug('📡 Direct fetch response status:', response.status);
-          
-          if (response.ok) {
-            const profiles = await response.json();
-            secureLogger.debug('✅ Direct fetch successful, profiles:', profiles);
-            
-            if (profiles && profiles.length > 0) {
-              secureLogger.debug('✅ Profile found:', profiles[0]);
-              secureLogger.debug('👤 Profile role:', profiles[0].role, 'Is super_admin?', profiles[0].role === 'super_admin');
-              
-              // Use React 18's automatic batching - all state updates in same function are batched
-              setUser(data.session.user);
-              setProfile(profiles[0]);
-              
-              // Small delay to ensure state propagates to all consumers before clearing loading
-              setTimeout(() => {
-                setLoading(false);
-                secureLogger.debug('🏁 Loading cleared after state propagation');
-              }, 50);
-              
-              secureLogger.debug('🏁 User and profile state updated');
-              return { error, profile: profiles[0], accessToken: data.session.access_token };
-            } else {
-              secureLogger.warn('⚠️ No profile found for user');
-              setUser(data.session.user);
-              setProfile(null);
-              setLoading(false);
-            }
-          } else {
-            const errorText = await response.text();
-            secureLogger.error('❌ Direct fetch failed:', response.status, errorText);
-            setUser(data.session.user);
-            setProfile(null);
-            setLoading(false);
-          }
-        } catch (fetchError) {
-          secureLogger.error('💥 Exception during direct fetch:', fetchError);
-          // Set user anyway so they can create profile
-          setUser(data.session.user);
-          setProfile(null);
-          setLoading(false);
-        }
+        const loaded = await loadSignedInProfile(data.session);
+        if (loaded.profile) return { error, ...loaded };
       } else {
         secureLogger.warn('⚠️ signInWithPassword returned no session data');
         setLoading(false);
@@ -637,6 +650,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: { message: parseAuthError(error) } };
       }
       
+      return { error };
+    }
+  };
+
+  /**
+   * Sign in with a passkey (WebAuthn discoverable credential).
+   * This replaces the password only: the session is aal1, so callers must run
+   * the same MFA assurance check as the password path.
+   */
+  const signInWithPasskey = async () => {
+    if (!isSupabaseConfigured) {
+      return { error: { message: 'Database connection not configured. Please check your .env file.' } };
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPasskey();
+      if (error || !data?.session?.user) {
+        setLoading(false);
+        return { error: error ?? { message: 'Passkey sign-in did not return a session' } };
+      }
+
+      const loaded = await loadSignedInProfile(data.session);
+      return { error: null, ...loaded };
+    } catch (error: unknown) {
+      secureLogger.error('💥 Passkey sign in exception:', error);
+      setLoading(false);
       return { error };
     }
   };
@@ -729,6 +769,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isOffline,
     isAnonymous,
     signIn,
+    signInWithPasskey,
     signOut,
     hasRole,
     createProfile,

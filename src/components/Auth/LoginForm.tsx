@@ -3,12 +3,14 @@ import { Eye, EyeOff, AlertCircle, Shield, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { parseAuthError } from '../../utils/authErrorParser';
-import { isSupabaseConfigured, supabase } from '../../lib/api/supabase';
+import { describePasskeyError } from '../../utils/passkeyErrors';
+import { isSupabaseConfigured, supabase, type UserProfile } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
 import { HacCareLogo } from '../Layout/HacCareLogo';
 import { PrivacyNoticeModal } from './PrivacyNoticeModal';
 import { MFAChallenge } from './MFAChallenge';
 import { MFAEnrollment } from './MFAEnrollment';
+import { AlternativeSignInOptions } from './AlternativeSignInOptions';
 import { getPostLoginPath } from '../../features/echo/echoMode';
 
 const doRedirect = (simulationOnly?: boolean) => {
@@ -19,9 +21,14 @@ export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() =>
+    new URLSearchParams(window.location.search).get('reason') === 'idle'
+      ? 'You were signed out after a period of inactivity. Please sign in again.'
+      : ''
+  );
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
   // Access token stored so MFAChallenge can call listFactors/challenge via
@@ -33,7 +40,8 @@ export const LoginForm: React.FC = () => {
   // Supabase's internal _useSession lock and cause an indefinite hang.
   const submitActiveRef = React.useRef(false);
   const navigate = useNavigate();
-  const { signIn, signOut, user, profile } = useAuth();
+  const { signIn, signInWithPasskey, signOut, user, profile } = useAuth();
+  const anySignInPending = loading || oauthLoading || passkeyLoading;
 
   // Redirect effect — covers two cases:
   // 1. Non-super_admin: redirect immediately once user+profile are available
@@ -116,42 +124,72 @@ export const LoginForm: React.FC = () => {
         return;
       }
 
-      // Check MFA for every user using the access_token directly to bypass getSession() → _acquireLock.
-      // Passing the token makes getAuthenticatorAssuranceLevel() decode the JWT synchronously
-      // instead of calling getSession() which contends with any concurrent background lock acquisition.
-      secureLogger.debug('🔐 Checking MFA assurance level...');
-      try {
-        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken);
-        if (aalError) throw aalError;
-
-        if (aal.currentLevel === 'aal2') {
-          secureLogger.debug('✅ Already at AAL2');
-          doRedirect(signedInProfile?.simulation_only ?? undefined);
-        } else if (aal.nextLevel === 'aal2') {
-          secureLogger.debug('🔐 Showing MFA challenge');
-          setMfaAccessToken(accessToken);
-          setLoading(false);
-          setMfaMode('challenge');
-        } else if (signedInProfile?.role === 'super_admin') {
-          secureLogger.debug('🔐 No factors enrolled — showing enrollment (required for super_admin)');
-          setLoading(false);
-          setMfaMode('enroll');
-        } else {
-          secureLogger.debug('✅ No factor enrolled, MFA optional for this role — redirecting');
-          doRedirect(signedInProfile?.simulation_only ?? undefined);
-        }
-      } catch (aalErr: unknown) {
-        // Fail CLOSED — sign out rather than silently letting the user through
-        secureLogger.error('MFA AAL check failed, signing out for safety:', aalErr);
-        submitActiveRef.current = false;
-        setLoading(false);
-        await signOut();
-      }
+      await gateOnMfa(signedInProfile, accessToken);
     } catch (err: unknown) {
       secureLogger.error('Login error:', err);
       setError(parseAuthError(err));
       submitActiveRef.current = false;
       setLoading(false);
+    }
+  };
+
+  // Password and passkey sign-ins both land at aal1, so both go through this gate.
+  // Uses the access_token directly to bypass getSession() → _acquireLock: passing the
+  // token makes getAuthenticatorAssuranceLevel() decode the JWT synchronously instead
+  // of contending with any concurrent background lock acquisition.
+  const gateOnMfa = async (signedInProfile: UserProfile | null | undefined, accessToken?: string) => {
+    secureLogger.debug('🔐 Checking MFA assurance level...');
+    try {
+      const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken);
+      if (aalError) throw aalError;
+
+      if (aal.currentLevel === 'aal2') {
+        secureLogger.debug('✅ Already at AAL2');
+        doRedirect(signedInProfile?.simulation_only ?? undefined);
+      } else if (aal.nextLevel === 'aal2') {
+        secureLogger.debug('🔐 Showing MFA challenge');
+        setMfaAccessToken(accessToken);
+        setLoading(false);
+        setMfaMode('challenge');
+      } else if (signedInProfile?.role === 'super_admin') {
+        secureLogger.debug('🔐 No factors enrolled — showing enrollment (required for super_admin)');
+        setLoading(false);
+        setMfaMode('enroll');
+      } else {
+        secureLogger.debug('✅ No factor enrolled, MFA optional for this role — redirecting');
+        doRedirect(signedInProfile?.simulation_only ?? undefined);
+      }
+    } catch (aalErr: unknown) {
+      // Fail CLOSED — sign out rather than silently letting the user through
+      secureLogger.error('MFA AAL check failed, signing out for safety:', aalErr);
+      submitActiveRef.current = false;
+      setLoading(false);
+      await signOut();
+    }
+  };
+
+  const handlePasskeySignIn = async () => {
+    if (!isSupabaseConfigured) {
+      setError('Database connection not configured. Please set up Supabase.');
+      return;
+    }
+
+    submitActiveRef.current = true;
+    setError('');
+    setPasskeyLoading(true);
+
+    try {
+      const { error: passkeyError, profile: signedInProfile, accessToken } = await signInWithPasskey();
+      if (passkeyError) {
+        secureLogger.error('❌ Passkey sign in error:', passkeyError);
+        setError(describePasskeyError(passkeyError));
+        submitActiveRef.current = false;
+        return;
+      }
+
+      await gateOnMfa(signedInProfile, accessToken);
+    } finally {
+      setPasskeyLoading(false);
     }
   };
 
@@ -274,7 +312,7 @@ export const LoginForm: React.FC = () => {
 
           <button
             type="submit"
-            disabled={loading || oauthLoading || !isSupabaseConfigured}
+            disabled={anySignInPending || !isSupabaseConfigured}
             className="w-full text-white py-3 px-4 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#3fbf9a] focus:ring-offset-2 focus:ring-offset-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: '#3fbf9a' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#35a687'}
@@ -284,27 +322,13 @@ export const LoginForm: React.FC = () => {
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="mt-6 mb-6 flex items-center">
-          <div className="flex-1 border-t border-slate-700"></div>
-          <span className="px-4 text-sm text-slate-500">or</span>
-          <div className="flex-1 border-t border-slate-700"></div>
-        </div>
-
-        {/* Microsoft Sign In Button */}
-        <button
-          onClick={handleMicrosoftSignIn}
-          disabled={loading || oauthLoading || !isSupabaseConfigured}
-          className="w-full bg-slate-800 border border-slate-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-700 hover:border-slate-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-slate-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-            <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-            <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-            <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-          </svg>
-          <span>{oauthLoading ? 'Redirecting...' : 'Sign in with Microsoft'}</span>
-        </button>
+        <AlternativeSignInOptions
+          disabled={anySignInPending || !isSupabaseConfigured}
+          oauthLoading={oauthLoading}
+          passkeyLoading={passkeyLoading}
+          onMicrosoftSignIn={handleMicrosoftSignIn}
+          onPasskeySignIn={handlePasskeySignIn}
+        />
 
         {/* Security Notice */}
         <div className="mt-6 bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">

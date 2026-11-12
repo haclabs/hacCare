@@ -68,7 +68,7 @@ export const PasswordSecurityCard: React.FC = () => {
   };
 
   const checkPasswordStrength = (password: string) => {
-    const hasMinLength = password.length >= 10;
+    const hasMinLength = password.length >= 8;
     const hasUppercase = /[A-Z]/.test(password);
     const hasLowercase = /[a-z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
@@ -229,7 +229,7 @@ export const PasswordSecurityCard: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className={`flex items-center space-x-1 ${passwordStrength.hasMinLength ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     <CheckCircle className="h-3 w-3" />
-                    <span>At least 10 characters</span>
+                    <span>At least 8 characters</span>
                   </div>
                   <div className={`flex items-center space-x-1 ${passwordStrength.hasUppercase && passwordStrength.hasLowercase ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     <CheckCircle className="h-3 w-3" />

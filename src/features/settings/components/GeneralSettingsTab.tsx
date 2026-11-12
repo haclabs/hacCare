@@ -6,6 +6,7 @@ import {
   User,
 } from 'lucide-react';
 import { PasswordSecurityCard } from './PasswordSecurityCard';
+import { PasskeysCard } from './PasskeysCard';
 
 interface ProfileInfo {
   first_name?: string;
@@ -147,6 +148,7 @@ export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
         </div>
 
         <PasswordSecurityCard />
+        <PasskeysCard />
       </div>
     </div>
   );
