@@ -1,11 +1,11 @@
 import React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { LogOut, Monitor, ScanLine } from 'lucide-react';
+import { LogOut, Monitor, ScanLine, Smartphone } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useTheme } from '../../../hooks/useTheme';
 import { HacCareLogo } from '../../../components/Layout/HacCareLogo';
-import { isEchoHost, setEchoPreferred } from '../echoMode';
+import { canReturnToDeviceFrame, isEchoHost, setEchoFullWindow, setEchoPreferred } from '../echoMode';
 
 /** Slim top bar: who is signed in, which simulation, and a large "Switch user" for shared devices. */
 export const EchoHeader: React.FC = () => {
@@ -25,7 +25,13 @@ export const EchoHeader: React.FC = () => {
 
   const handleExitEcho = () => {
     setEchoPreferred(false);
-    window.location.assign('/app');
+    // From the laptop phone preview, leave the frame rather than load the desktop inside it
+    (window.top ?? window).location.assign('/app');
+  };
+
+  const handlePhonePreview = () => {
+    setEchoFullWindow(false);
+    window.location.reload();
   };
 
   const userName = profile ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() : '';
@@ -51,6 +57,16 @@ export const EchoHeader: React.FC = () => {
             <span className="hidden sm:block text-sm text-gray-600 dark:text-gray-300 truncate max-w-[12rem]">
               {userName}
             </span>
+          )}
+          {canReturnToDeviceFrame() && (
+            <button
+              onClick={handlePhonePreview}
+              className="flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+              title="Show Echo at phone size"
+            >
+              <Smartphone className="h-4 w-4" />
+              <span className="hidden md:inline">Phone preview</span>
+            </button>
           )}
           {!isEchoHost() && (
             <button

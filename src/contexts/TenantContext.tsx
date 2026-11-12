@@ -16,6 +16,7 @@ import { getCurrentSubdomain } from '../lib/infrastructure/subdomainService';
 import { useAuth } from './auth/SimulationAwareAuthProvider';
 import { supabase } from '../lib/api/supabase';
 import { secureLogger } from '../lib/security/secureLogger';
+import { ECHO_PATH } from '../features/echo/echoMode';
 
 /**
  * Tenant Context Interface
@@ -143,8 +144,10 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // BUT: Instructors should NOT auto-restore simulations ON LOGIN - they go to program workspace first
       // EXCEPTION: If they're currently in simulation portal or actively in simulation, DO restore it
       const simulationTenantId = localStorage.getItem('current_simulation_tenant');
-      const isInSimulationContext = window.location.pathname.includes('/simulation-portal') || 
-                                     window.location.pathname === '/app';
+      // Echo only works inside a simulation; its sign-in already forgets the last one (getPostLoginPath)
+      const isInSimulationContext = window.location.pathname.includes('/simulation-portal') ||
+                                     window.location.pathname === '/app' ||
+                                     window.location.pathname.startsWith(ECHO_PATH);
 
       // For simulation-only users, restore simulation tenant if available before skipping tenant load
       if (profile?.simulation_only && profile?.role !== 'super_admin') {

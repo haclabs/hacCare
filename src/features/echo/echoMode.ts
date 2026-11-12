@@ -10,6 +10,7 @@ export const ECHO_PATH = '/echo';
 
 const PREFERENCE_KEY = 'haccare-echo-mode';
 const SUGGESTION_DISMISSED_KEY = 'haccare-echo-suggestion-dismissed';
+const FULL_WINDOW_KEY = 'haccare-echo-full-window';
 
 const hasWindow = () => typeof window !== 'undefined';
 
@@ -66,4 +67,30 @@ export function getPostLoginPath(simulationOnly?: boolean): string {
     return '/app/simulation-portal';
   }
   return '/app';
+}
+
+/**
+ * On a laptop or desktop, Echo is shown inside a phone-sized frame so it looks as it will on
+ * the device. Real phones and tablets (no mouse) always get the full screen.
+ */
+export function shouldShowDeviceFrame(): boolean {
+  if (!hasWindow() || window.self !== window.top) return false;
+  if (window.localStorage.getItem(FULL_WINDOW_KEY) === 'on') return false;
+  return !isLikelyHandheld() && window.innerWidth >= 768;
+}
+
+/** Laptop user who chose "Use full window" — offer the way back to the phone preview. */
+export function canReturnToDeviceFrame(): boolean {
+  return (
+    hasWindow() &&
+    window.self === window.top &&
+    window.localStorage.getItem(FULL_WINDOW_KEY) === 'on' &&
+    !isLikelyHandheld()
+  );
+}
+
+export function setEchoFullWindow(on: boolean): void {
+  if (!hasWindow()) return;
+  if (on) window.localStorage.setItem(FULL_WINDOW_KEY, 'on');
+  else window.localStorage.removeItem(FULL_WINDOW_KEY);
 }

@@ -38,6 +38,7 @@ export async function getIntakeOutputEvents(
     hoursBack?: number;
     direction?: IoDirection;
     limit?: number;
+    tenantId?: string;
   }
 ): Promise<IntakeOutputEvent[]> {
   try {
@@ -58,6 +59,10 @@ export async function getIntakeOutputEvents(
 
     if (options?.limit) {
       query = query.limit(options.limit);
+    }
+
+    if (options?.tenantId) {
+      query = query.eq('tenant_id', options.tenantId);
     }
 
     const { data, error } = await query;
