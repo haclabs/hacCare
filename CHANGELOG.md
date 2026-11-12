@@ -7,6 +7,34 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-12 - SIGN OUT AFTER INACTIVITY
+
+* hacCare now signs you out when you leave it idle: after 120 minutes for
+  students and 30 minutes for instructors, coordinators and admins. A
+  "Still there?" countdown appears two minutes beforehand. Before, an open
+  tab on a shared computer stayed signed in indefinitely
+* Supabase Auth now also ends sessions that have not refreshed for 2 hours
+  (tab closed, laptop asleep) and every session after 12 hours
+* Passwords must be at least 8 characters (was 6 in Supabase, 10 on the
+  Settings page). Existing passwords keep working
+* Email sign-in codes now expire after 1 hour instead of 24
+* Removed the unused session manager and config modules
+  (src/services/auth/sessionManager.ts, src/config/) that described an idle
+  timeout but were never loaded
+
+===============================================================================
+[Unreleased] - 2026-11-12 - SIGN IN WITH A PASSKEY
+
+* Users can add a passkey (Face ID, Touch ID, Windows Hello or a security
+  key) under Settings → General → Passkeys, then use "Sign in with a passkey"
+  on the login page instead of typing their password
+* A passkey replaces the password only. Anyone with two-factor
+  authentication is still asked for their code, and super admins must still
+  set up an authenticator app
+* Passkeys only work on the site address set as the Relying Party in
+  Supabase (Authentication → Passkeys)
+
+===============================================================================
 [Unreleased] - 2026-11-05 - HOME-SCREEN APP ICON
 
 * Adding hacCare (or Echo) to a phone or tablet home screen now shows a

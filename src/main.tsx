@@ -8,6 +8,7 @@ import { PatientProvider } from './contexts/PatientContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { TenantProvider } from './contexts/TenantContext';
 import { ProtectedRoute } from './components/Auth/ProtectedRoute';
+import { IdleLogout } from './components/Auth/IdleLogout';
 import { LoginForm } from './components/Auth/LoginForm';
 import { PrivacyPage } from './components/Auth/PrivacyPage';
 import { SetNewPassword } from './components/Auth/SetNewPassword';
@@ -62,6 +63,7 @@ createRoot(document.getElementById('root')!).render(
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <SimulationAwareAuthProvider>
+              <IdleLogout />
               <Routes>
                 {/* Public routes */}
                 <Route path="/" element={echoHost ? <Navigate to={ECHO_PATH} replace /> : <LandingPage />} />
