@@ -290,7 +290,7 @@ export const EditMedicationForm: React.FC<EditMedicationFormProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dosage *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Order *</label>
               <input
                 type="text"
                 value={form.dosage}
