@@ -7,6 +7,40 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
+
+* Echo's patient screen now has a bottom tab bar with Meds, Vitals, I&O and
+  Orders. Scanning another wristband switches patient and stays on the same
+  tab
+* Vitals, I&O and Orders have phone-first screens that read and save the
+  same data as the desktop modules:
+  - Vitals: a "Record vitals" sheet with large number fields (any subset of
+    vitals, BP as a pair, student name required) and a reading history
+  - I&O: 8/12/24-hour intake, output and net totals with a timeline of
+    entries; adding an entry uses the existing I&O form
+  - Orders: New/All filter and one-tap Acknowledge (existing name prompt);
+    new orders keep appearing as they are released during a simulation
+* Neuro and newborn assessments, and adding/editing orders, remain in the
+  desktop view
+* On a laptop or desktop, Echo opens inside a phone-sized frame so it looks
+  as it will on the device. "Use full window" turns this off on that
+  computer; "Phone preview" in the Echo header turns it back on. Tablets and
+  phones are unaffected. Sign in with Microsoft does not work inside the
+  frame; use the full window for that
+* Instructors and coordinators no longer drop out of their simulation in
+  Echo when the browser refreshes their sign-in in the background
+* The Vitals tab opens with a "Latest vitals" glance: each vital's latest
+  value in large type beside a trend line of recent readings, with
+  out-of-range rows tinted amber (abnormal) or red (critical) using the
+  existing age-based ranges
+* The patient bar is now a solid header with allergies directly under the
+  patient's name
+* The Echo home screen shows a card for each patient, with DOB, an allergy
+  badge and shortcuts straight to each tab
+* The desktop patient action bar now hides itself when a screen passes it no
+  navigation, replacing an Echo-only check in the MAR
+
+===============================================================================
 [Unreleased] - 2026-11-12 - SIGN OUT AFTER INACTIVITY
 
 * hacCare now signs you out when you leave it idle: after 120 minutes for

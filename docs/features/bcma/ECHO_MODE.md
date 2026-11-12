@@ -1,8 +1,8 @@
 # Echo Mode (Bedside Tablets)
 
 Echo mode turns a tablet with a built-in barcode scanner, or any phone or tablet with a
-camera, into a bedside medication scanner, like the handhelds hospitals use for barcode medication administration. It uses
-the same simulations, MAR and BCMA checks as the desktop app, with less on screen.
+camera, into a bedside scanner, like the handhelds hospitals use for barcode medication administration. It uses
+the same simulations, MAR, BCMA checks, vitals, I&O and orders as the desktop app, with less on screen.
 
 ## Flow
 
@@ -10,13 +10,25 @@ the same simulations, MAR and BCMA checks as the desktop app, with less on scree
    was in a simulation.
 2. **Select a simulation.** Shows the simulations the signed-in user is assigned to
    (same `get_user_simulation_assignments` RPC as the Simulation Portal).
-3. **Scan patient wristband.** Opens that patient's MAR. A patient list is shown
-   below for tapping instead.
-4. **Patient MAR.** The standard `MARModule`. Tap **Administer** / **Give PRN** to
-   run the normal BCMA patient + medication scan. The patient bar (name, room,
-   DOB, allergies) stays pinned at the top.
-5. **Next patient.** Returns to the wristband scan. Scanning another wristband from
-   the MAR also switches patient (ignored while a BCMA check is open).
+3. **Scan patient wristband.** Opens that patient's MAR. Below the scan prompt, a card
+   for each patient opens the MAR, and its **Meds / Vitals / I&O / Orders** shortcuts open
+   that tab directly.
+4. **Patient tabs.** A bottom tab bar switches between:
+   - **Meds:** the standard `MARModule` (it already stacks on phones). **Administer** /
+     **Give PRN** run the normal BCMA patient + medication scan.
+   - **Vitals** (`EchoVitalsTab`): latest-value + trend row per vital (`EchoVitalsGlance`,
+     tinted by the age-based ranges in `vitalRanges.ts`), a **Record vitals** bottom sheet
+     that saves via `updatePatientVitals` with the student's name, and recent readings.
+   - **I&O** (`EchoIntakeOutputTab`): 8/12/24 h totals and an entry timeline; **Add**
+     opens the desktop `AddIntakeOutputModal`.
+   - **Orders** (`EchoOrdersTab`): New/All filter, acknowledge via
+     `StudentAcknowledgeModal`; polls every 30 s in a simulation so released orders appear.
+
+   Each tab has its own URL (`/echo/patient/:id/:tab`, no tab segment for Meds). The
+   patient bar (name, allergies, room, ID, DOB) stays pinned at the top. Neuro/newborn
+   assessments and adding or editing orders stay on the desktop view.
+5. **Next patient.** Returns to the wristband scan. Scanning another wristband from any
+   tab switches patient and stays on that tab (ignored while a BCMA check is open).
 
 **Switch user** signs out, forgets the simulation and clears cached patient data.
 Auth sessions are kept in `sessionStorage`, so closing the browser tab also signs out.
@@ -42,6 +54,15 @@ The scanner must send scans as keyboard input ending in Enter (often called
 
 Wristband matching reuses `bcmaService.validatePatientBarcode`, so every wristband format
 the BCMA check accepts also works at the echo scan screen. Matches must be exact.
+
+## Laptop phone preview
+
+On a computer with a mouse and a window at least 768 px wide, `/echo` shows Echo inside a
+phone-sized iframe (`EchoDeviceFrame`). Echo's layout depends on screen width, so a narrow
+box alone would still get the tablet layout; the iframe gets the real phone one. It is the
+same origin, so sign-in, the simulation choice and the camera carry over. **Use full window**
+stores `haccare-echo-full-window` on the device; **Phone preview** in the header clears it.
+Microsoft sign-in cannot run inside the frame (its login page refuses to be framed).
 
 ## Camera scanning (phones and tablets without a scanner)
 
@@ -90,8 +111,13 @@ tenant would take that subdomain.
 
 - `src/features/echo/echoMode.ts`: host detection, device preference, post-login path
 - `src/features/echo/components/`: `EchoRoute` (providers), `EchoApp` (routes),
-  `EchoSimulationList`, `EchoScanPatient`, `EchoPatientMAR`, `EchoModeSuggestion`,
+  `EchoSimulationList`, `EchoScanPatient` + `EchoPatientCard` (home screen), `EchoPatient`
+  + `EchoPatientBanner` + `EchoTabBar` (patient shell), `EchoVitalsTab` + `EchoVitalsGlance` +
+  `EchoVitalsSheet`, `EchoIntakeOutputTab`, `EchoOrdersTab`, `EchoSheet` (bottom sheet), `EchoModeSuggestion`,
   `EchoCamera` (camera button + `useEchoCamera`), `EchoCameraScanner` (camera view)
 - `src/features/echo/cameraScanner.ts`: decoder loading and scan-window crop maths
+- `src/features/echo/echoTabs.ts`: the patient tabs and their URLs
+- `src/features/echo/vitalsGlance.ts`: vitals history → glance rows (tested in `echo.test.ts`)
+- `src/features/echo/vitalsEntry.ts`: bedside vitals form validation (tested in `echo.test.ts`)
 - `src/features/echo/findPatientByWristband.ts`: wristband → patient lookup (tested in
   `echo.test.ts`)

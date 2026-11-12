@@ -17,10 +17,12 @@ export const useEchoCamera = () => useContext(EchoCameraContext);
 /**
  * Lets a phone or tablet camera stand in for a hardware scanner. A code read by the camera is
  * sent as the same `barcodescanned` event a scanner gun produces, so wristband lookup, the MAR
- * and BCMA all handle it unchanged. The floating button sits above the BCMA dialog (z-50).
+ * and BCMA all handle it unchanged. The floating button sits above the BCMA dialog (z-50), and
+ * is lifted clear of the patient tab bar when one is showing.
  */
-export const EchoCameraProvider: React.FC<{ showButton: boolean; children: React.ReactNode }> = ({
+export const EchoCameraProvider: React.FC<{ showButton: boolean; aboveTabBar?: boolean; children: React.ReactNode }> = ({
   showButton,
+  aboveTabBar = false,
   children,
 }) => {
   const [open, setOpen] = useState(false);
@@ -40,7 +42,11 @@ export const EchoCameraProvider: React.FC<{ showButton: boolean; children: React
         <button
           onClick={openCamera}
           aria-label="Scan with camera"
-          className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-5 z-[70] flex items-center gap-2 rounded-full bg-haccare-teal px-5 py-4 font-semibold text-white shadow-xl hover:bg-haccare-teal-dark"
+          className={`fixed ${
+            aboveTabBar
+              ? 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))]'
+              : 'bottom-[max(1.25rem,env(safe-area-inset-bottom))]'
+          } right-5 z-[70] flex items-center gap-2 rounded-full bg-haccare-teal px-5 py-4 font-semibold text-white shadow-xl hover:bg-haccare-teal-dark`}
         >
           <Camera className="h-6 w-6" />
           <span className="hidden sm:inline">Camera</span>

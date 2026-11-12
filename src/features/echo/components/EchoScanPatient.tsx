@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, BedDouble, Camera, ChevronRight, DoorOpen, Loader2, ScanLine } from 'lucide-react';
+import { AlertCircle, Camera, DoorOpen, Loader2, ScanLine } from 'lucide-react';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useMultiTenantPatients } from '../../patients/hooks/useMultiTenantPatients';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { ECHO_PATH } from '../echoMode';
+import { echoPatientPath } from '../echoTabs';
 import { findPatientByWristband } from '../findPatientByWristband';
 import { useEchoScan } from '../hooks/useEchoScan';
 import { useEchoCamera } from './EchoCamera';
+import { EchoPatientCard } from './EchoPatientCard';
 
-/** In a simulation: scan a wristband (or tap a patient) to open that patient's MAR. */
+/** Echo home screen in a simulation: scan a wristband, or tap a patient card or one of its shortcuts. */
 export const EchoScanPatient: React.FC = () => {
   const navigate = useNavigate();
   const { exitSimulationTenant } = useTenant();
@@ -22,7 +24,7 @@ export const EchoScanPatient: React.FC = () => {
     const patient = findPatientByWristband(barcode, patients);
     if (patient) {
       setScanError(null);
-      navigate(`${ECHO_PATH}/patient/${patient.id}`);
+      navigate(echoPatientPath(patient.id));
     } else {
       setScanError(`Wristband "${barcode}" doesn't match a patient in this simulation.`);
     }
@@ -44,19 +46,21 @@ export const EchoScanPatient: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
-      <div className="rounded-2xl border-2 border-dashed border-haccare-teal bg-white dark:bg-gray-800 p-6 sm:p-8 text-center shadow-sm">
-        <ScanLine className="mx-auto h-16 w-16 text-haccare-teal animate-pulse" />
-        <h1 className="mt-4 text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Scan patient wristband</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-300">
-          Point the scanner at the patient's wristband to open their MAR.
-        </p>
+      <div className="flex flex-col items-center gap-4 rounded-2xl bg-gradient-to-br from-haccare-teal to-haccare-teal-dark p-6 text-center text-white shadow-lg sm:flex-row sm:text-left">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+          <ScanLine className="h-9 w-9 animate-pulse" />
+        </span>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold">Scan patient wristband</h1>
+          <p className="mt-1 text-white/90">Point the scanner at the wristband to open the patient's chart.</p>
+        </div>
         {cameraAvailable && (
           <button
             onClick={openCamera}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-haccare-teal px-6 py-4 text-lg font-semibold text-white hover:bg-haccare-teal-dark"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3 text-lg font-semibold text-haccare-teal-dark shadow hover:bg-gray-50"
           >
             <Camera className="h-6 w-6" />
-            Scan with camera
+            Camera
           </button>
         )}
       </div>
@@ -68,8 +72,9 @@ export const EchoScanPatient: React.FC = () => {
         </div>
       )}
 
-      <h2 className="mt-8 mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        Or select a patient
+      <h2 className="mt-8 mb-3 flex items-baseline justify-between text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        Patients
+        {!isLoading && <span className="normal-case tracking-normal font-normal">{patients.length} in this simulation</span>}
       </h2>
 
       {isLoading ? (
@@ -81,29 +86,9 @@ export const EchoScanPatient: React.FC = () => {
           No patients in this simulation yet.
         </p>
       ) : (
-        <ul className="divide-y divide-gray-200 dark:divide-gray-700 overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-md">
+        <ul className="grid gap-4 sm:grid-cols-2">
           {sortedPatients.map((patient) => (
-            <li key={patient.id}>
-              <button
-                onClick={() => navigate(`${ECHO_PATH}/patient/${patient.id}`)}
-                className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
-              >
-                <span className="flex h-12 w-16 shrink-0 flex-col items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                  <BedDouble className="h-4 w-4" />
-                  <span className="text-xs font-semibold">
-                    {patient.room_number}
-                    {patient.bed_number}
-                  </span>
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-lg font-semibold text-gray-900 dark:text-white">
-                    {patient.last_name}, {patient.first_name}
-                  </span>
-                  <span className="block text-sm text-gray-500 dark:text-gray-400">{patient.patient_id}</span>
-                </span>
-                <ChevronRight className="h-6 w-6 text-gray-400" />
-              </button>
-            </li>
+            <EchoPatientCard key={patient.id} patient={patient} />
           ))}
         </ul>
       )}

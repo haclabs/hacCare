@@ -61,6 +61,13 @@ export const PatientActionBar: React.FC<PatientActionBarProps> = ({
   hasNewNotes = false,
   activeAction = null,
 }) => {
+  // Hosts with their own navigation (e.g. Echo's tab bar) pass no handlers
+  const hasNav = !!(
+    onChartClick || onVitalsClick || onMedsClick || onLabsClick || onOrdersClick ||
+    onHacMapClick || onIOClick || onNotesClick || onFlowsheetsClick
+  );
+  if (!hasNav) return null;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 px-6 py-4 mb-6">
       <div className="flex items-center justify-between gap-3">
