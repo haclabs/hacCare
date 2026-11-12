@@ -22,6 +22,9 @@ dist-ssr/
 .mcp.json
 .vscode/mcp.json
 
+# Claude Code local settings — saved command approvals can embed tokens/passwords
+.claude/settings.local.json
+
 # Test outputs and temporary files
 tests/temp-*
 tests/*.tmp
