@@ -7,6 +7,37 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-15 - NATIVE NURSING, ADMISSION AND BOWEL FLOWSHEETS
+
+* Nursing Assessment, Admission Assessment and Bowel Assessment are now native
+  Flowsheets forms. Like the other flowsheets, every save adds a new entry
+  with the student's name, shows in the form's history strip, and appears in
+  the debrief
+* Fixed: submitting an Admission Assessment overwrote the patient's admission
+  record, blanking height, weight, social history and other fields set up by
+  the instructor. Student admission assessments are now separate entries and
+  never change the chart; the chart record is shown read-only at the top of
+  the form, and staff can correct it with "Edit chart record", which saves
+  only the fields shown
+* Fixed: admitting diagnosis, allergies, orientation and mobility entered on
+  the Admission form were never saved
+* Fixed: Nursing, Admission and Bowel submissions never reached the debrief
+  because the student name was not stored with them
+* Fixed: Cognitive Screening and Mood & Affect opened a "form component not
+  yet registered" placeholder instead of the form
+* Nursing Assessment is now a short general survey (appearance, level of
+  consciousness, orientation, key findings, priority and plan); detailed
+  findings belong in the system flowsheets
+* Bowel Assessment uses the Bristol Stool Scale, records "no bowel movement",
+  and flags blood or black/red stool
+* Removed: the old Assessments module (patient module card and the Clinical
+  Assessments tab in Vitals), its form schemas, and the dashboard save
+  handler. Removing it also retires its unfinished parts: the fall-risk score
+  that was never calculated, the pain-scale rule that never ran, and drafts
+  that were lost on refresh. Earlier entries stay in the database and in the
+  printed patient record
+
+===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 
 * Echo's patient screen now has a bottom tab bar with Meds, Vitals, I&O and

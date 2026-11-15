@@ -826,7 +826,7 @@ Each area saves on its own, and everything is attached to the same patient.`,
 
 Use the category bar at the top to jump to a section, and **Patient Overview** to leave.
 
-> Past entries open in a read-only detail view. Instructors can correct a charted nursing assessment, admission assessment or advanced directive. Students always start from a blank form.`,
+> Every save adds a new entry with the student's name. Past entries open in a read-only detail view. The admission assessment shows the patient's admission record from the chart for reference. Instructors can correct that record with **Edit chart record**; students' assessments never change it.`,
       },
     ],
   },

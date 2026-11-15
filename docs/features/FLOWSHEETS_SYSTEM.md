@@ -228,15 +228,18 @@ Migration: `database/migrations/history/20260520000000_create_patient_system_ass
 
 ## Current Status
 
-| Category | Ready | Coming Soon |
-|----------|-------|-------------|
-| Monitoring | Vitals, Neuro, Newborn (→ Vitals module) | Pain |
-| Systems | — | Respiratory, Cardiovascular, GI, GU, MSK, Integumentary |
-| Risk & Safety | — | Fall Risk, Braden Scale, Restraint |
-| Wound & Device | Device Placement, Wound (→ HacMap) | — |
-| Fluid & Metabolic | I&O (→ I&O), BBIT (→ MAR), Bowel (→ Forms) | — |
-| Mental Health | — | Biopsychosocial, Cognitive Screening, Mood |
-| Therapeutic Rec | — | 6 TRG assessments |
-| Clinical Docs | Handover, Directives, Nursing/Admission Assessment (→ existing modules) | Consents, BPMH |
+| Category | Native forms | Module shortcuts |
+|----------|--------------|------------------|
+| Monitoring | Pain | Vitals, Neuro, Newborn (→ Vitals module) |
+| Systems | Respiratory, Cardiovascular, GI, GU, MSK, Integumentary | — |
+| Risk & Safety | Fall Risk, Braden Scale, Restraint | — |
+| Wound & Device | — | Device Placement, Wound (→ HacMap) |
+| Fluid & Metabolic | Bowel | I&O (→ I&O), BBIT (→ MAR) |
+| Mental Health | Biopsychosocial, Cognitive Screening, Mood | — |
+| Therapeutic Rec | — | Therapeutic Recreation (→ TR module) |
+| Clinical Docs | Nursing Assessment, Admission Assessment, Consents, BPMH | Handover, Directives |
 
-**12 live (module shortcuts) · 21 coming soon (native forms)**
+**18 native forms · 10 module shortcuts.** Every native form saves a new row in
+`patient_system_assessments` per submission (student name in `nurse_name`).
+`src/features/flowsheets/registry.test.ts` fails if an active native card has no
+entry in `FORM_COMPONENTS`.

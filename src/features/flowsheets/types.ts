@@ -22,7 +22,6 @@ export type FlowsheetCategory =
 export type FlowsheetModuleTarget =
   | 'vitals'
   | 'medications'
-  | 'forms'
   | 'handover'
   | 'advanced-directives'
   | 'hacmap'

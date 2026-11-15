@@ -214,22 +214,6 @@ export const fetchPatientAssessments = async (patientId: string): Promise<Patien
 };
 
 /**
- * Overwrite a saved nursing assessment's form data (stored as JSON in patient_notes.content)
- */
-export const updateAssessmentFormData = async (assessmentId: string, formData: Record<string, unknown>): Promise<void> => {
-  const { error } = await supabase
-    .from('patient_notes')
-    .update({ content: JSON.stringify(formData) })
-    .eq('id', assessmentId)
-    .eq('type', 'Assessment');
-
-  if (error) {
-    secureLogger.error('Error updating assessment note:', error);
-    throw new Error(`Failed to update assessment: ${error.message}`);
-  }
-};
-
-/**
  * Delete an assessment
  */
 export const deleteAssessment = async (assessmentId: string): Promise<void> => {

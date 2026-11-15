@@ -35,7 +35,6 @@ import type { Patient } from '../../../types';
 type ActiveModule =
   | 'vitals'
   | 'medications'
-  | 'forms'
   | 'overview'
   | 'handover'
   | 'advanced-directives'

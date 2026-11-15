@@ -76,11 +76,20 @@ export const FORM_COMPONENTS: Readonly<Partial<Record<string, LazyFormComponent>
   'biopsychosocial': React.lazy(() =>
     import('./forms/BiopsychosocialAssessmentForm').then(({ BiopsychosocialAssessmentForm }) => ({ default: BiopsychosocialAssessmentForm }))
   ),
-  'cognitive': React.lazy(() =>
+  'cognitive-screening': React.lazy(() =>
     import('./forms/CognitiveScreeningForm').then(({ CognitiveScreeningForm }) => ({ default: CognitiveScreeningForm }))
   ),
-  'mood': React.lazy(() =>
+  'mood-assessment': React.lazy(() =>
     import('./forms/MoodAssessmentForm').then(({ MoodAssessmentForm }) => ({ default: MoodAssessmentForm }))
+  ),
+  'bowel': React.lazy(() =>
+    import('./forms/BowelAssessmentForm').then(({ BowelAssessmentForm }) => ({ default: BowelAssessmentForm }))
+  ),
+  'nursing-assessment': React.lazy(() =>
+    import('./forms/NursingAssessmentForm').then(({ NursingAssessmentForm }) => ({ default: NursingAssessmentForm }))
+  ),
+  'admission-assessment': React.lazy(() =>
+    import('./forms/AdmissionAssessmentForm').then(({ AdmissionAssessmentForm }) => ({ default: AdmissionAssessmentForm }))
   ),
   'consents': React.lazy(() =>
     import('./forms/ConsentForm').then(({ ConsentForm }) => ({ default: ConsentForm }))

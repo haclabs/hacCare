@@ -743,7 +743,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null),
 
-      // 🆕 System Assessments (Flowsheets Hub — 14 native forms, one shared table)
+      // 🆕 System Assessments (Flowsheets Hub — 18 native forms, one shared table)
       supabase
         .from('patient_system_assessments')
         .select('*')

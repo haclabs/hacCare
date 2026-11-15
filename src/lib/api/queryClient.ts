@@ -90,6 +90,9 @@ export const queryKeys = {
   dueMedications: (patientId: string) => ['medications', 'due', patientId] as const,
   overdueMedications: (patientId: string) => ['medications', 'overdue', patientId] as const,
   
+  admissionRecord: (patientId: string, tenantId: string) =>
+    ['admission-record', patientId, tenantId] as const,
+
   // Flowsheet system assessments
   systemAssessments: (patientId: string, tenantId: string) =>
     ['system-assessments', patientId, tenantId] as const,

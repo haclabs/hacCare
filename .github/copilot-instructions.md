@@ -383,7 +383,7 @@ if (Object.keys(vitalData).length <= 2) {
 
 **Schema Layer (Form Validation):**
 - `vitalsSchemas.ts`: `vitalSigns` field marked `required: false`, `allowPartial: true`
-- `formsSchemas.ts`: Same changes for admission assessment
+- (`formsSchemas.ts` carried the same change for the legacy admission form; that form was replaced by the native Admission Assessment flowsheet in November 2026)
 - UI displays notice: "Enter available vitals only - not all measurements are required"
 
 **Input Validation Updates:**

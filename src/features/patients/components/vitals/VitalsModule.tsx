@@ -22,7 +22,6 @@ import { PatientActionBar } from '../../../../components/PatientActionBar';
 import { calculatePreciseAge, assessVitalSign } from '../../../../utils/vitalRanges';
 import { NeuroAssessmentTab } from './NeuroAssessmentTab';
 import { NewbornAssessmentTab } from '../assessments/NewbornAssessmentTab';
-import { FormsModule } from '../../../forms';
 import { secureLogger } from '../../../../lib/security/secureLogger';
 
 interface VitalsModuleProps {
@@ -50,13 +49,11 @@ interface VitalsModuleProps {
   hasNewLabs?: boolean;
   hasNewOrders?: boolean;
   hasNewNotes?: boolean;
-  onAssessmentSave?: (assessment: any) => void;
 }
 
-type VitalsView = 'trends' | 'neuro' | 'newborn' | 'assessments';
+type VitalsView = 'trends' | 'neuro' | 'newborn';
 
 export const VitalsModule: React.FC<VitalsModuleProps> = ({
-  onAssessmentSave,
   patient,
   vitals,
   onVitalsUpdate,
@@ -667,16 +664,6 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
         >
           Newborn Assessment
         </button>
-        <button
-          onClick={() => setActiveView('assessments')}
-          className={`px-5 py-2 text-sm font-medium border-b-2 transition-colors ${
-            activeView === 'assessments'
-              ? 'border-purple-600 text-purple-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Clinical Assessments
-        </button>
       </div>
 
       {/* Clinical Alerts */}
@@ -709,17 +696,6 @@ export const VitalsModule: React.FC<VitalsModuleProps> = ({
           patient={patient}
           currentUser={currentUser}
         />
-      )}
-
-      {/* Clinical Assessments tab */}
-      {activeView === 'assessments' && (
-        <div className="px-4 py-4">
-          <FormsModule
-            patient={patient}
-            onAssessmentSave={onAssessmentSave || (() => {})}
-            currentUser={currentUser}
-          />
-        </div>
       )}
 
       {/* Detailed Trends Modal */}

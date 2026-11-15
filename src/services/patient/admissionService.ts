@@ -80,6 +80,33 @@ export const fetchAdmissionRecord = async (patientId: string): Promise<Admission
 };
 
 /**
+ * Fields staff can correct from the Admission Assessment flowsheet.
+ * Saved with a partial upsert so every other column on the record is left untouched.
+ */
+export type EditableAdmissionFields = Pick<
+  AdmissionRecord,
+  'admission_type' | 'attending_physician' | 'chief_complaint' | 'medical_history' | 'surgical_history' | 'current_living_arrangements'
+>;
+
+export const saveAdmissionRecordFields = async (
+  patientId: string,
+  tenantId: string,
+  fields: Partial<EditableAdmissionFields>,
+): Promise<AdmissionRecord> => {
+  const { data, error } = await supabase
+    .from('patient_admission_records')
+    .upsert({ ...fields, patient_id: patientId, tenant_id: tenantId }, { onConflict: 'patient_id' })
+    .select()
+    .single();
+
+  if (error) {
+    secureLogger.error('Error saving admission record fields:', error);
+    throw error;
+  }
+  return data;
+};
+
+/**
  * Create or update admission record
  */
 export const upsertAdmissionRecord = async (admissionRecord: AdmissionRecord): Promise<AdmissionRecord> => {
