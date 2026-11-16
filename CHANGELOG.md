@@ -94,6 +94,22 @@ documented in this file.
   unaffected. `verify_rls_isolation.sql` gains check 24 (migration
   `20261116023618_doctors_orders_entered_in_error.sql`)
 * The order card was extracted from DoctorsOrders.tsx (now under 350 lines)
+
+===============================================================================
+[Unreleased] - 2026-11-16 - SECURITY: TENANT ISOLATION ON FIVE CLINICAL TABLES
+
+* Admission records, advanced directives, patient notes, bowel records and
+  diabetic records could be read, edited or deleted by any signed-in user in
+  any institution. Their access rules compared each row's tenant with itself,
+  so the check always passed
+* They now follow the same rule as patients: an active super admin, or an
+  active member of the record's tenant. Anyone who can see a patient still
+  sees that patient's records, including in debriefs. Diabetic records keep
+  their recorder-only edits and admin/nurse-only deletes
+* `verify_rls_isolation.sql` gains check 21 (no foreign clinical records for a
+  student) and check 22 (no access rule may compare a row's tenant with itself)
+* Migration: `20261116010209_fix_clinical_records_tenant_isolation.sql`
+
 ===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 
