@@ -57,6 +57,13 @@ documented in this file.
   (migration `20261116013352_force_template_flowsheet_baseline.sql`)
 * `registry.test.ts` now fails if any flowsheet form saves under a different
   type than its card, or doesn't save the student name or baseline flag
+* Fixed: "Reset with template updates" ignored flowsheet baselines added or
+  edited in the template after launch. It now replaces the simulation's
+  flowsheet entries with the template's current baselines, matched to
+  patients by name and date of birth. Patient and medication barcodes are
+  unchanged. Templates saved before flowsheets were captured keep their
+  simulation's baselines (migration
+  `20261116015239_sync_flowsheet_baselines_on_template_reset.sql`)
 ===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 

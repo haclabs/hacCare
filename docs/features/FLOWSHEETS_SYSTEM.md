@@ -172,11 +172,16 @@ Module shortcuts (vitals, HacMap, etc.) are unaffected — they delegate to exis
   code path writes the row. Entries saved in a running simulation are student work.
 - **Launch:** `patient_system_assessments` is registered in `simulation_table_config`, so template
   baselines are copied into the new simulation.
-- **Reset:** both `reset_simulation_for_next_session` and `reset_simulation_with_template_updates`
-  delete student entries (`is_baseline = false`) and keep the simulation's baselines in place. They
-  leave this table out of the snapshot restore so baselines aren't duplicated. As a result, a
-  "reset with template updates" does **not** pick up flowsheet baselines added or edited in the
-  template after launch.
+- **Reset for next session** (`reset_simulation_for_next_session`) deletes student entries
+  (`is_baseline = false`) and keeps the simulation's baselines in place.
+- **Reset with template updates** (`reset_simulation_with_template_updates`) replaces all
+  flowsheet entries with the template's current baselines, so baselines added or edited in the
+  template after launch arrive. Each is attached to the simulation patient with the same first
+  name, last name and date of birth; the patients table is only read, so barcodes never change.
+  Templates whose snapshot predates flowsheet capture (no `patient_system_assessments` key) keep
+  the simulation's baselines and only lose student entries. Re-save such a template to capture
+  its flowsheets.
+- Both leave this table out of the generic snapshot restore so baselines aren't duplicated.
 - **Debrief:** `studentActivityService.ts` reads every non-baseline entry with a `nurse_name`,
   whatever the form; `DebriefActivityItem.tsx` shows each one under the form's title.
 - **Print:** the printed patient record has a "Flowsheet Assessments" section listing every entry,
