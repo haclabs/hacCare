@@ -8,6 +8,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { StudentNameVariants } from './studentName';
 
 export interface StudentActivity {
   studentName: string;
@@ -808,11 +809,11 @@ export async function getStudentActivitiesBySimulation(
 
     // Group all activities by student name
     const studentMap = new Map<string, StudentActivity>();
+    const nameVariants = new StudentNameVariants();
 
     // Helper to initialize student entry
     const getOrCreateStudent = (name: string): StudentActivity => {
-      // Normalize student name: trim whitespace and lowercase for lookup
-      const normalizedName = name.trim().toLowerCase();
+      const normalizedName = nameVariants.add(name);
       const trimmedName = name.trim();
       
       if (!studentMap.has(normalizedName)) {
@@ -1405,6 +1406,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Convert map to array and sort by total entries
+    studentMap.forEach((student, key) => { student.studentName = nameVariants.displayName(key); });
     const result = Array.from(studentMap.values()).sort((a, b) => b.totalEntries - a.totalEntries);
     
     secureLogger.debug('📊 FINAL RESULT - Total students:', result.length);
@@ -1438,15 +1440,4 @@ export async function getStudentActivitiesBySimulation(
     secureLogger.error('Error fetching student activities:', error);
     throw error;
   }
-}
-
-/**
- * Get activity summary for a specific student in a simulation
- */
-export async function getStudentActivitySummary(
-  simulationId: string,
-  studentName: string
-): Promise<StudentActivity | null> {
-  const allActivities = await getStudentActivitiesBySimulation(simulationId);
-  return allActivities.find(activity => activity.studentName === studentName) || null;
 }

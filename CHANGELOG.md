@@ -64,6 +64,13 @@ documented in this file.
   unchanged. Templates saved before flowsheets were captured keep their
   simulation's baselines (migration
   `20261116015239_sync_flowsheet_baselines_on_template_reset.sql`)
+* Debriefs now treat names that differ only in capitals, spacing,
+  punctuation or accents as the same student ("J. Smith", "J.Smith" and
+  "j smith" are one person). This merges 11 split students across 10 past
+  debriefs when they are next opened; nothing stored is changed. Numbers
+  still count ("Student 1" and "Student 2" stay separate), and typos are not
+  merged. The history list's participant count uses the same rule. Removed
+  the unused getStudentActivitySummary helper
 ===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 

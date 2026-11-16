@@ -16,6 +16,7 @@ import { generateStudentActivityPDF } from '../../../utils/reactPdfGenerator';
 import type { Database } from '../../../types/supabase';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { StudentActivitySection } from './DebriefStudentSection';
+import { StudentNameVariants } from '../../../services/simulation/studentName';
 
 type HistoryRecordWithActivities = Database['public']['Tables']['simulation_history']['Row'] & {
   student_activities?: StudentActivity[] | null;
@@ -52,9 +53,10 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
   const [isExporting, setIsExporting] = useState(false);
   function deduplicateStudentActivities(activities: StudentActivity[]): StudentActivity[] {
     const studentMap = new Map<string, StudentActivity>();
+    const nameVariants = new StudentNameVariants();
     
     activities.forEach((activity) => {
-      const normalizedName = activity.studentName.trim().toLowerCase();
+      const normalizedName = nameVariants.add(activity.studentName, activity.totalEntries || 1);
       const existing = studentMap.get(normalizedName);
       
       if (existing) {
@@ -91,6 +93,7 @@ const EnhancedDebriefModal: React.FC<EnhancedDebriefModalProps> = ({ historyReco
       }
     });
     
+    studentMap.forEach((student, key) => { student.studentName = nameVariants.displayName(key); });
     return Array.from(studentMap.values());
   }
 
