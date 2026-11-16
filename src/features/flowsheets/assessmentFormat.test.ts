@@ -50,4 +50,15 @@ describe('renderFlowsheetSection', () => {
   it('says so when the entries could not be loaded', () => {
     expect(renderFlowsheetSection(null)).toContain('could not be loaded');
   });
+
+  it('keeps an entry marked in error, struck through, with who and why', () => {
+    const html = renderFlowsheetSection([{
+      ...row('pain', { score: 4 }),
+      entered_in_error_at: '2026-11-16T02:00:00Z', entered_in_error_by: 'Sam Lee', entered_in_error_reason: 'Wrong patient',
+    }]);
+    expect(html).toContain('ENTERED IN ERROR — Sam Lee');
+    expect(html).toContain('Wrong patient');
+    expect(html).toContain('text-decoration:line-through');
+    expect(html).toContain('Score');
+  });
 });

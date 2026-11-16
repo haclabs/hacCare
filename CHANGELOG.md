@@ -71,6 +71,14 @@ documented in this file.
   still count ("Student 1" and "Student 2" stay separate), and typos are not
   merged. The history list's participant count uses the same rule. Removed
   the unused getStudentActivitySummary helper
+* Flowsheet entries can be marked "entered in error". Open a student entry
+  from the form's history strip, choose "Mark as entered in error", and enter
+  your name and a reason. The entry is never edited or deleted: it stays,
+  struck through with the name, reason and time, in the history, the debrief
+  and the printed record, and the student saves a corrected entry. The
+  database only lets signed-in users add the mark, once, to student entries
+  (migration `20261116020506_flowsheet_entered_in_error.sql`). Regenerated
+  `src/types/supabase.ts`
 ===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 

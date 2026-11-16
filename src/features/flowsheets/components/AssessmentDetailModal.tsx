@@ -13,12 +13,17 @@
 import React from 'react';
 import { Clock, User, X } from 'lucide-react';
 import { humanizeKey, isEmptyValue } from '../assessmentFormat';
+import { EnteredInErrorPanel } from './EnteredInErrorPanel';
 
 interface AssessmentDetailModalProps {
   title: string;
   recordedAt: string;
   nurseName: string | null;
   data: Record<string, unknown>;
+  enteredInErrorAt?: string | null;
+  enteredInErrorBy?: string | null;
+  enteredInErrorReason?: string | null;
+  onMarkEnteredInError?: (by: string, reason: string) => Promise<void>;
   onClose: () => void;
 }
 
@@ -105,6 +110,10 @@ export const AssessmentDetailModal: React.FC<AssessmentDetailModalProps> = ({
   recordedAt,
   nurseName,
   data,
+  enteredInErrorAt,
+  enteredInErrorBy,
+  enteredInErrorReason,
+  onMarkEnteredInError,
   onClose,
 }) => {
   const fields = renderEntries(data);
@@ -144,12 +153,19 @@ export const AssessmentDetailModal: React.FC<AssessmentDetailModalProps> = ({
 
         {/* Body */}
         {fields.length > 0 ? (
-          <dl className="px-6 py-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+          <dl className={`px-6 py-5 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 ${enteredInErrorAt ? 'line-through decoration-red-400 opacity-70' : ''}`}>
             {fields}
           </dl>
         ) : (
           <p className="px-6 py-8 text-sm text-gray-500 text-center">No details recorded for this entry.</p>
         )}
+
+        <EnteredInErrorPanel
+          markedAt={enteredInErrorAt}
+          markedBy={enteredInErrorBy}
+          reason={enteredInErrorReason}
+          onMark={onMarkEnteredInError}
+        />
       </div>
     </div>
   );

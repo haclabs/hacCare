@@ -118,6 +118,10 @@ export interface SystemAssessmentRow {
   is_baseline: boolean;
   recorded_at: string;
   created_at: string;
+  /** Set when a student marks the entry as entered in error; the entry is kept. */
+  entered_in_error_at?: string | null;
+  entered_in_error_by?: string | null;
+  entered_in_error_reason?: string | null;
 }
 
 /**

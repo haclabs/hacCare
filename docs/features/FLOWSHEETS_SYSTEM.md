@@ -186,6 +186,12 @@ Module shortcuts (vitals, HacMap, etc.) are unaffected — they delegate to exis
   whatever the form; `DebriefActivityItem.tsx` shows each one under the form's title.
 - **Print:** the printed patient record has a "Flowsheet Assessments" section listing every entry,
   grouped by form. The debrief and print share the formatting in `assessmentFormat.ts`.
+- **Entered in error:** entries are never edited or deleted. Opening a student entry from a form's
+  history strip offers "Mark as entered in error", which asks for a name and reason. The entry
+  stays, struck through with the name, reason and time, in the history strip, debrief and printed
+  record; the student then saves a corrected entry. Marked entries are skipped when a form looks
+  up the latest entry. A trigger (`guard_system_assessment_update`) lets signed-in users only add
+  the mark, once, to student entries; baselines are corrected in the template instead.
 
 ### `lastRecorded` Timestamps (Not Yet Implemented)
 

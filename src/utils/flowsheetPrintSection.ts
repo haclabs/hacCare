@@ -23,14 +23,20 @@ function renderEntry(row: SystemAssessmentRow, first: boolean): string {
     })
     .join('');
 
+  const inError = row.entered_in_error_at
+    ? `<div style="margin-bottom:6px;font-size:12px;font-weight:bold;color:#b91c1c;">ENTERED IN ERROR — ${e(row.entered_in_error_by)}, ${e(new Date(row.entered_in_error_at).toLocaleString())}: ${e(row.entered_in_error_reason)}</div>`
+    : '';
+  const strike = row.entered_in_error_at ? 'text-decoration:line-through;color:#6b7280;' : '';
+
   return `
     ${first ? '' : '<hr style="margin:12px 0;border:none;border-top:1px solid #e5e7eb;">'}
     <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;color:#64748b;">
       <span><strong>${e(row.nurse_name || 'Unknown')}</strong>${row.is_baseline ? ' • Baseline (set by instructor)' : ''}</span>
       <span>${e(new Date(row.recorded_at).toLocaleString())}</span>
     </div>
+    ${inError}
     ${fields
-      ? `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;">${fields}</div>`
+      ? `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;${strike}">${fields}</div>`
       : '<div style="font-style:italic;">No details recorded</div>'}`;
 }
 

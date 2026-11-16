@@ -538,9 +538,11 @@ export type Database = {
           is_acknowledged: boolean | null
           notes: string | null
           order_date: string
+          order_link_key: string | null
           order_text: string
           order_time: string
           order_type: string | null
+          ordered_dose: string | null
           ordering_doctor: string
           patient_id: string
           release_after_minutes: number | null
@@ -559,9 +561,11 @@ export type Database = {
           is_acknowledged?: boolean | null
           notes?: string | null
           order_date?: string
+          order_link_key?: string | null
           order_text: string
           order_time?: string
           order_type?: string | null
+          ordered_dose?: string | null
           ordering_doctor: string
           patient_id: string
           release_after_minutes?: number | null
@@ -580,9 +584,11 @@ export type Database = {
           is_acknowledged?: boolean | null
           notes?: string | null
           order_date?: string
+          order_link_key?: string | null
           order_text?: string
           order_time?: string
           order_type?: string | null
+          ordered_dose?: string | null
           ordering_doctor?: string
           patient_id?: string
           release_after_minutes?: number | null
@@ -1847,6 +1853,7 @@ export type Database = {
           last_administered: string | null
           name: string
           next_due: string
+          order_link_key: string | null
           patient_id: string | null
           prescribed_by: string
           release_after_minutes: number | null
@@ -1870,6 +1877,7 @@ export type Database = {
           last_administered?: string | null
           name: string
           next_due: string
+          order_link_key?: string | null
           patient_id?: string | null
           prescribed_by: string
           release_after_minutes?: number | null
@@ -1893,6 +1901,7 @@ export type Database = {
           last_administered?: string | null
           name?: string
           next_due?: string
+          order_link_key?: string | null
           patient_id?: string | null
           prescribed_by?: string
           release_after_minutes?: number | null
@@ -2278,6 +2287,9 @@ export type Database = {
         Row: {
           assessment_data: Json
           created_at: string
+          entered_in_error_at: string | null
+          entered_in_error_by: string | null
+          entered_in_error_reason: string | null
           id: string
           is_baseline: boolean
           nurse_id: string | null
@@ -2290,6 +2302,9 @@ export type Database = {
         Insert: {
           assessment_data?: Json
           created_at?: string
+          entered_in_error_at?: string | null
+          entered_in_error_by?: string | null
+          entered_in_error_reason?: string | null
           id?: string
           is_baseline?: boolean
           nurse_id?: string | null
@@ -2302,6 +2317,9 @@ export type Database = {
         Update: {
           assessment_data?: Json
           created_at?: string
+          entered_in_error_at?: string | null
+          entered_in_error_by?: string | null
+          entered_in_error_reason?: string | null
           id?: string
           is_baseline?: boolean
           nurse_id?: string | null

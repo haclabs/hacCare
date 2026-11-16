@@ -32,9 +32,8 @@
 
 import React, { useState } from 'react';
 import { ClipboardList } from 'lucide-react';
-import { useSystemAssessmentHistory } from '../hooks/useSystemAssessment';
+import { useMarkEnteredInError, useSystemAssessmentHistory } from '../hooks/useSystemAssessment';
 import { AssessmentDetailModal } from './AssessmentDetailModal';
-import type { SystemAssessmentRow } from '../types';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -91,7 +90,9 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
   title,
 }) => {
   const { data: history, isLoading } = useSystemAssessmentHistory(patientId, tenantId, systemType);
-  const [selectedEntry, setSelectedEntry] = useState<SystemAssessmentRow | null>(null);
+  const { markEnteredInError } = useMarkEnteredInError(patientId, tenantId, systemType);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedEntry = history?.find(entry => entry.id === selectedId) ?? null;
 
   // Nothing to show yet — render nothing rather than an empty container
   if (isLoading || !history?.length) return null;
@@ -112,12 +113,15 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
       <div className="flex gap-3 overflow-x-auto px-4 py-3 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
         {history.map((entry) => {
           const summary = formatSummary(entry.assessment_data as Record<string, unknown>);
+          const inError = !!entry.entered_in_error_at;
           return (
             <button
               type="button"
               key={entry.id}
-              onClick={() => setSelectedEntry(entry)}
-              className="flex-shrink-0 w-40 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 space-y-1.5 text-left hover:bg-gray-100 hover:border-gray-300 transition-colors"
+              onClick={() => setSelectedId(entry.id)}
+              className={`flex-shrink-0 w-40 rounded-lg border px-3 py-2.5 space-y-1.5 text-left transition-colors ${
+                inError ? 'border-red-200 bg-red-50 hover:bg-red-100' : 'border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300'
+              }`}
             >
               {/* Relative timestamp */}
               <p className="text-[11px] font-medium text-gray-400 leading-none">
@@ -125,11 +129,17 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
               </p>
 
               {/* Key metric badge */}
-              <span
-                className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-none ${COLOR_CLASSES[summary.color]}`}
-              >
-                {summary.label}
-              </span>
+              {inError ? (
+                <span className="inline-block rounded-full border border-red-200 bg-white px-2 py-0.5 text-[11px] font-semibold leading-none text-red-700">
+                  Entered in error
+                </span>
+              ) : (
+                <span
+                  className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold leading-none ${COLOR_CLASSES[summary.color]}`}
+                >
+                  {summary.label}
+                </span>
+              )}
 
               {/* Student name */}
               <p className="text-[11px] text-gray-500 truncate leading-none">
@@ -147,7 +157,15 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
           recordedAt={selectedEntry.recorded_at}
           nurseName={selectedEntry.nurse_name}
           data={selectedEntry.assessment_data}
-          onClose={() => setSelectedEntry(null)}
+          enteredInErrorAt={selectedEntry.entered_in_error_at}
+          enteredInErrorBy={selectedEntry.entered_in_error_by}
+          enteredInErrorReason={selectedEntry.entered_in_error_reason}
+          onMarkEnteredInError={
+            selectedEntry.is_baseline
+              ? undefined
+              : (by, reason) => markEnteredInError({ id: selectedEntry.id, by, reason })
+          }
+          onClose={() => setSelectedId(null)}
         />
       )}
     </div>

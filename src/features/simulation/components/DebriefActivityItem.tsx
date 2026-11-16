@@ -571,8 +571,9 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
       }
       case 'systemAssessments': {
         const entries = assessmentEntries(item.assessment_data as Record<string, unknown> | null);
+        const inError = !!item.entered_in_error_at;
         const fields = (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+          <div className={`grid grid-cols-2 gap-x-4 gap-y-2 text-xs ${inError ? 'line-through decoration-red-400 opacity-70' : ''}`}>
             {entries.map(({ key, label, value }) => (
               <div key={key} className={`flex flex-col ${value.length > 60 ? 'col-span-2' : ''}`}>
                 <span className="font-semibold text-sky-400 uppercase tracking-wide mb-0.5">{label}</span>
@@ -584,7 +585,12 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
         return (
           <div className="text-sm">
             <p className="font-medium text-gray-700">{item.recorded_at ? format(new Date(item.recorded_at), 'PPp') : 'N/A'}</p>
-            <p className="text-gray-900 mt-1 font-medium">🗂️ {flowsheetTitle(String(item.system_type ?? ''))}</p>
+            <p className={`text-gray-900 mt-1 font-medium ${inError ? 'line-through decoration-red-400' : ''}`}>🗂️ {flowsheetTitle(String(item.system_type ?? ''))}</p>
+            {inError && (
+              <p className="mt-1 text-xs font-medium text-red-700">
+                Entered in error by {String(item.entered_in_error_by)} ({format(new Date(item.entered_in_error_at as string), 'PPp')}): {String(item.entered_in_error_reason)}
+              </p>
+            )}
             {entries.length > 0 && (
               <div className="mt-2">
                 <button

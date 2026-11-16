@@ -309,6 +309,9 @@ interface SystemAssessmentEntry {
   nurse_name: string | null;
   assessment_data: Record<string, unknown>;
   patient_name?: string;
+  entered_in_error_at?: string | null;
+  entered_in_error_by?: string | null;
+  entered_in_error_reason?: string | null;
 }
 
 // 🆕 Therapeutic Recreation module — 6 dedicated tables
@@ -1288,6 +1291,9 @@ export async function getStudentActivitiesBySimulation(
         nurse_name: sa.nurse_name,
         assessment_data: sa.assessment_data,
         patient_name: patientNameMap.get(sa.patient_id),
+        entered_in_error_at: sa.entered_in_error_at,
+        entered_in_error_by: sa.entered_in_error_by,
+        entered_in_error_reason: sa.entered_in_error_reason,
       });
       student.totalEntries++;
     });
