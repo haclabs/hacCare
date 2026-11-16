@@ -461,6 +461,51 @@ BEGIN
   RAISE NOTICE 'PASS: students cannot delete flowsheet entries, save baselines or edit admission records';
 END $$;
 
+-- 29. Staff can delete a baseline while building a template, but not entries in a
+-- running simulation (20261116033316).
+DO $$
+DECLARE
+  v_staff  uuid;
+  v_row    uuid;
+  v_sim    uuid;
+  v_simrow uuid;
+  v_n      bigint;
+BEGIN
+  SELECT tu.user_id, a.id INTO v_staff, v_row
+  FROM patient_system_assessments a
+  JOIN tenants t ON t.id = a.tenant_id AND t.tenant_type IN ('simulation_template', 'patient_template')
+  JOIN tenant_users tu ON tu.tenant_id = a.tenant_id AND tu.is_active
+  JOIN user_profiles up ON up.id = tu.user_id AND up.is_active AND up.role NOT IN ('student', 'nurse')
+  LIMIT 1;
+  SELECT a.id INTO v_simrow
+  FROM patient_system_assessments a JOIN tenants t ON t.id = a.tenant_id AND t.tenant_type = 'simulation_active'
+  JOIN tenant_users tu ON tu.tenant_id = a.tenant_id AND tu.user_id = v_staff AND tu.is_active
+  LIMIT 1;
+
+  IF v_row IS NULL THEN
+    RAISE NOTICE 'SKIP: no staff member of a template with flowsheet baselines';
+    RETURN;
+  END IF;
+
+  SET LOCAL role authenticated;
+  PERFORM set_config('request.jwt.claims',
+                     json_build_object('sub', v_staff, 'role', 'authenticated')::text, true);
+  DELETE FROM patient_system_assessments WHERE id = v_row;
+  GET DIAGNOSTICS v_n = ROW_COUNT;
+  IF v_n <> 1 THEN
+    RAISE EXCEPTION 'FAIL 29: staff % could not delete template baseline %', v_staff, v_row;
+  END IF;
+  IF v_simrow IS NOT NULL THEN
+    BEGIN
+      DELETE FROM patient_system_assessments WHERE id = v_simrow;
+      RAISE EXCEPTION 'FAIL 29b: staff % deleted simulation flowsheet entry %', v_staff, v_simrow;
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+  END IF;
+  RESET role;
+  RAISE NOTICE 'PASS: staff can delete template baselines only';
+END $$;
+
 -- 28. Internal helpers live in `private`, not in the API-exposed public schema.
 DO $$
 DECLARE v_bad text;

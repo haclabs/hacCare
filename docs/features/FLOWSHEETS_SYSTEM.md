@@ -196,6 +196,10 @@ Module shortcuts (vitals, HacMap, etc.) are unaffected — they delegate to exis
 - **No deletes, no student baselines:** `guard_system_assessment_write` refuses deletes from
   signed-in users (reset, launch and patient-deletion cascades are unaffected) and refuses
   `is_baseline = true` from student and nurse logins outside templates.
+- **Correcting a template baseline:** baselines can't be edited or marked in error, so staff
+  delete a wrong one while editing the template (history strip → open the entry → **Delete
+  baseline**) and save the correct one. The history strip shows baselines in templates and only
+  student entries in simulations. Staff can delete only in template tenants.
 
 ### `lastRecorded` Timestamps (Not Yet Implemented)
 

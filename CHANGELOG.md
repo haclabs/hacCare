@@ -22,7 +22,14 @@ documented in this file.
   also record the login that made them, alongside the typed name
 * Internal helper functions moved to a `private` schema that the Data API
   doesn't expose, so they can't be called directly
-* `verify_rls_isolation.sql` gains checks 25-28 (migration
+* Instructors can delete a wrong flowsheet baseline while editing a template
+  (open it from the form's history strip, then Delete baseline) and save the
+  correct one. Baselines can't be edited or marked in error, so before this a
+  wrong one was stuck in the template and every simulation launched from it.
+  The history strip now shows baselines in templates. Deleting stays blocked
+  in running simulations (migration
+  `20261116033316_allow_template_baseline_delete.sql`)
+* `verify_rls_isolation.sql` gains checks 25-29 (migration
   `20261116032701_charting_integrity_followups.sql`)
 
 ===============================================================================

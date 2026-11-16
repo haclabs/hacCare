@@ -32,7 +32,9 @@
 
 import React, { useState } from 'react';
 import { ClipboardList } from 'lucide-react';
-import { useMarkEnteredInError, useSystemAssessmentHistory } from '../hooks/useSystemAssessment';
+import { useDeleteSystemAssessment, useMarkEnteredInError, useSystemAssessmentHistory } from '../hooks/useSystemAssessment';
+import { useTenant } from '../../../contexts/TenantContext';
+import { useAuth } from '../../../hooks/useAuth';
 import { AssessmentDetailModal } from './AssessmentDetailModal';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -89,8 +91,14 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
   formatSummary,
   title,
 }) => {
-  const { data: history, isLoading } = useSystemAssessmentHistory(patientId, tenantId, systemType);
+  const { currentTenant } = useTenant();
+  const { profile } = useAuth();
+  const isTemplate =
+    currentTenant?.tenant_type === 'simulation_template' || currentTenant?.tenant_type === 'patient_template';
+  const isStaff = !!profile?.role && !['student', 'nurse'].includes(profile.role);
+  const { data: history, isLoading } = useSystemAssessmentHistory(patientId, tenantId, systemType, isTemplate);
   const { markEnteredInError } = useMarkEnteredInError(patientId, tenantId, systemType);
+  const { deleteEntry } = useDeleteSystemAssessment(patientId, tenantId, systemType);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedEntry = history?.find(entry => entry.id === selectedId) ?? null;
 
@@ -103,7 +111,9 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-gray-50">
         <ClipboardList className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
         <span className="text-xs font-semibold text-gray-600">
-          {history.length === 1
+          {isTemplate
+            ? `${history.length} baseline ${history.length === 1 ? 'entry' : 'entries'} in this template`
+            : history.length === 1
             ? '1 previous assessment this session'
             : `${history.length} previous assessments this session`}
         </span>
@@ -164,6 +174,14 @@ export const AssessmentHistoryStrip: React.FC<AssessmentHistoryStripProps> = ({
             selectedEntry.is_baseline
               ? undefined
               : (by, reason) => markEnteredInError({ id: selectedEntry.id, by, reason })
+          }
+          onDelete={
+            isTemplate && isStaff && selectedEntry.is_baseline
+              ? async () => {
+                  await deleteEntry(selectedEntry.id);
+                  setSelectedId(null);
+                }
+              : undefined
           }
           onClose={() => setSelectedId(null)}
         />

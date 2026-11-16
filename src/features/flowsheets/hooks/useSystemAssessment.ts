@@ -146,14 +146,16 @@ async function fetchSystemAssessmentHistory(
   patientId: string,
   tenantId: string,
   systemType: string,
+  includeBaselines: boolean,
 ): Promise<SystemAssessmentRow[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('patient_system_assessments')
     .select(ROW_COLUMNS)
     .eq('patient_id', patientId)
     .eq('tenant_id', tenantId)
-    .eq('system_type', systemType)
-    .eq('is_baseline', false)
+    .eq('system_type', systemType);
+  if (!includeBaselines) query = query.eq('is_baseline', false);
+  const { data, error } = await query
     .order('recorded_at', { ascending: false })
     .limit(20);
 
@@ -171,10 +173,12 @@ export function useSystemAssessmentHistory(
   patientId: string,
   tenantId: string,
   systemType: string,
+  /** Templates hold only baselines, so they show them; simulations show student work only. */
+  includeBaselines = false,
 ) {
   return useQuery({
-    queryKey: queryKeys.systemAssessmentHistory(patientId, tenantId, systemType),
-    queryFn: () => fetchSystemAssessmentHistory(patientId, tenantId, systemType),
+    queryKey: [...queryKeys.systemAssessmentHistory(patientId, tenantId, systemType), includeBaselines],
+    queryFn: () => fetchSystemAssessmentHistory(patientId, tenantId, systemType, includeBaselines),
     enabled: !!patientId && !!tenantId && !!systemType,
     staleTime: 0,
   });
@@ -207,4 +211,27 @@ export function useMarkEnteredInError(patientId: string, tenantId: string, syste
   });
 
   return { markEnteredInError: mutation.mutateAsync, isMarking: mutation.isPending };
+}
+
+/** Deletes a baseline while staff build a template; the database refuses deletes anywhere else. */
+export function useDeleteSystemAssessment(patientId: string, tenantId: string, systemType: string) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('patient_system_assessments')
+        .delete()
+        .eq('id', id)
+        .eq('tenant_id', tenantId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.systemAssessmentHistory(patientId, tenantId, systemType) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.systemAssessment(patientId, tenantId, systemType) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.systemAssessments(patientId, tenantId) });
+    },
+  });
+
+  return { deleteEntry: mutation.mutateAsync, isDeleting: mutation.isPending };
 }
