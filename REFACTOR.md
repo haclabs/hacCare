@@ -132,6 +132,8 @@ extractions did not.
 > Notes: PatientDetail.tsx: 1242 → 140 lines. PatientDetailTabs.tsx extracted (310 lines).
 > useQuery replaces Promise.all + 7 useState setters + useEffect; refreshes via queryClient.invalidateQueries.
 > Stale imports to clinical/components/mar replaced with patients/components/mar (Phase 2.1 path).
+> 2026-11-16: PatientDetail, PatientDetailTabs and their tab-only components were deleted — no route
+> rendered them (patients open in ModularPatientDashboard).
 > tsc --noEmit: clean ✓
 
 ---

@@ -1,11 +1,8 @@
 /**
  * Modern Patient Management Integration
  * 
- * This component provides a modern alternative to the existing PatientDetail tabs,
- * utilizing the new modular patient management system. It can be used as:
- * 1. A complete replacement for PatientDetail
- * 2. An additional tab within the existing system
- * 3. A standalone patient management interface
+ * Standalone patient management interface built on the modular patient
+ * dashboard. Used by the modular patient system demo route.
  */
 
 import React, { useState, useEffect } from 'react';

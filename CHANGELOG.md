@@ -36,7 +36,11 @@ documented in this file.
   that was never calculated, the pain-scale rule that never ran, and drafts
   that were lost on refresh. Earlier entries stay in the database and in the
   printed patient record
-
+* Removed unreachable code (about 4,000 lines): the old PatientDetail page and
+  its tabs, including AdmissionRecordsForm (which had the same field-wiping
+  bug), the old notes, assessment and bowel tab components, VitalsContent and
+  VitalSignsEditor, and the unused fetchTargetActivity audit helper. No route
+  rendered any of it; patients open in the modular patient dashboard
 ===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 
