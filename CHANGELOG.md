@@ -7,6 +7,25 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-16 - CHARTING INTEGRITY FOLLOW-UPS
+
+* Security: flowsheet entries can no longer be deleted by signed-in users;
+  a student could remove an entry (or an instructor baseline) over the API
+  instead of marking it in error. Resets, launches and deleting a patient
+  still remove them
+* Security: student and nurse logins can no longer save flowsheet baselines
+  in a running simulation (such entries would survive resets and be hidden
+  from the debrief)
+* Security: student and nurse logins can read but no longer change the
+  chart's admission record; the screen already limited editing to staff
+* "Entered in error" marks on flowsheet entries and doctor's orders now
+  also record the login that made them, alongside the typed name
+* Internal helper functions moved to a `private` schema that the Data API
+  doesn't expose, so they can't be called directly
+* `verify_rls_isolation.sql` gains checks 25-28 (migration
+  `20261116032701_charting_integrity_followups.sql`)
+
+===============================================================================
 [Unreleased] - 2026-11-15 - NATIVE NURSING, ADMISSION AND BOWEL FLOWSHEETS
 
 * Nursing Assessment, Admission Assessment and Bowel Assessment are now native

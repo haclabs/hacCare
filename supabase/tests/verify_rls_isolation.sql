@@ -391,7 +391,7 @@ BEGIN
   EXCEPTION WHEN check_violation THEN NULL;
   END;
   -- 24c. ...nor mark an order a staff member wrote (20261116025021).
-  IF NOT public.user_is_simulation_participant((SELECT created_by FROM doctors_orders WHERE id = v_order)) THEN
+  IF NOT private.user_is_simulation_participant((SELECT created_by FROM doctors_orders WHERE id = v_order)) THEN
     BEGIN
       UPDATE doctors_orders SET entered_in_error_by = 'test', entered_in_error_reason = 'test' WHERE id = v_order;
       RAISE EXCEPTION 'FAIL 24c: student % marked staff order % entered in error', v_student, v_order;
@@ -400,6 +400,80 @@ BEGIN
   END IF;
   RESET role;
   RAISE NOTICE 'PASS: students cannot edit or delete doctors orders';
+END $$;
+
+-- 25-27. Charting integrity for simulation logins (20261116032701).
+DO $$
+DECLARE
+  v_student uuid;
+  v_tid     uuid;
+  v_pat     uuid;
+  v_psa     uuid;
+  v_adm     uuid;
+  v_n       bigint;
+BEGIN
+  SELECT tu.user_id, tu.tenant_id, p.id INTO v_student, v_tid, v_pat
+  FROM tenant_users tu
+  JOIN user_profiles up ON up.id = tu.user_id
+  JOIN tenants t ON t.id = tu.tenant_id AND t.tenant_type = 'simulation_active'
+  JOIN patients p ON p.tenant_id = tu.tenant_id
+  WHERE up.role = 'student' AND up.is_active AND tu.is_active
+  LIMIT 1;
+
+  IF v_pat IS NULL THEN
+    RAISE NOTICE 'SKIP: no student in a simulation with patients';
+    RETURN;
+  END IF;
+
+  INSERT INTO patient_admission_records (patient_id, tenant_id) VALUES (v_pat::text, v_tid)
+  ON CONFLICT (patient_id) DO NOTHING;
+  SELECT id INTO v_adm FROM patient_admission_records WHERE patient_id = v_pat::text;
+
+  SET LOCAL role authenticated;
+  PERFORM set_config('request.jwt.claims',
+                     json_build_object('sub', v_student, 'role', 'authenticated')::text, true);
+
+  -- 25. A student can't save a flowsheet baseline in a running simulation...
+  BEGIN
+    INSERT INTO patient_system_assessments (patient_id, tenant_id, system_type, nurse_name, is_baseline)
+    VALUES (v_pat, v_tid, 'pain', 'test', true);
+    RAISE EXCEPTION 'FAIL 25: student % saved a flowsheet baseline', v_student;
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+
+  -- 26. ...or delete a flowsheet entry.
+  INSERT INTO patient_system_assessments (patient_id, tenant_id, system_type, nurse_name)
+  VALUES (v_pat, v_tid, 'pain', 'test') RETURNING id INTO v_psa;
+  BEGIN
+    DELETE FROM patient_system_assessments WHERE id = v_psa;
+    RAISE EXCEPTION 'FAIL 26: student % deleted a flowsheet entry', v_student;
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+
+  -- 27. A student can read but not change the admission record.
+  UPDATE patient_admission_records SET chief_complaint = 'test' WHERE id = v_adm;
+  GET DIAGNOSTICS v_n = ROW_COUNT;
+  IF v_n > 0 THEN
+    RAISE EXCEPTION 'FAIL 27: student % edited admission record %', v_student, v_adm;
+  END IF;
+
+  RESET role;
+  RAISE NOTICE 'PASS: students cannot delete flowsheet entries, save baselines or edit admission records';
+END $$;
+
+-- 28. Internal helpers live in `private`, not in the API-exposed public schema.
+DO $$
+DECLARE v_bad text;
+BEGIN
+  SELECT string_agg(p.oid::regprocedure::text, ', ') INTO v_bad
+  FROM pg_proc p
+  WHERE p.pronamespace = 'public'::regnamespace
+    AND p.oid::regprocedure::text IN ('caller_is_simulation_participant()', 'user_is_simulation_participant(uuid)',
+                                      'tenant_is_template(uuid)', 'order_linked_medication_exists(uuid,uuid)');
+  IF v_bad IS NOT NULL THEN
+    RAISE EXCEPTION 'FAIL 28: internal helpers back in public: %', v_bad;
+  END IF;
+  RAISE NOTICE 'PASS: internal helpers are in the private schema';
 END $$;
 
 ROLLBACK;
