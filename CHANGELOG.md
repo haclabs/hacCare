@@ -7,6 +7,110 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-15 - NATIVE NURSING, ADMISSION AND BOWEL FLOWSHEETS
+
+* Nursing Assessment, Admission Assessment and Bowel Assessment are now native
+  Flowsheets forms. Like the other flowsheets, every save adds a new entry
+  with the student's name, shows in the form's history strip, and appears in
+  the debrief
+* Fixed: submitting an Admission Assessment overwrote the patient's admission
+  record, blanking height, weight, social history and other fields set up by
+  the instructor. Student admission assessments are now separate entries and
+  never change the chart; the chart record is shown read-only at the top of
+  the form, and staff can correct it with "Edit chart record", which saves
+  only the fields shown
+* Fixed: admitting diagnosis, allergies, orientation and mobility entered on
+  the Admission form were never saved
+* Fixed: Nursing, Admission and Bowel submissions never reached the debrief
+  because the student name was not stored with them
+* Fixed: Cognitive Screening and Mood & Affect opened a "form component not
+  yet registered" placeholder instead of the form
+* Nursing Assessment is now a short general survey (appearance, level of
+  consciousness, orientation, key findings, priority and plan); detailed
+  findings belong in the system flowsheets
+* Bowel Assessment uses the Bristol Stool Scale, records "no bowel movement",
+  and flags blood or black/red stool
+* Removed: the old Assessments module (patient module card and the Clinical
+  Assessments tab in Vitals), its form schemas, and the dashboard save
+  handler. Removing it also retires its unfinished parts: the fall-risk score
+  that was never calculated, the pain-scale rule that never ran, and drafts
+  that were lost on refresh. Earlier entries stay in the database and in the
+  printed patient record
+* Removed unreachable code (about 4,000 lines): the old PatientDetail page and
+  its tabs, including AdmissionRecordsForm (which had the same field-wiping
+  bug), the old notes, assessment and bowel tab components, VitalsContent and
+  VitalSignsEditor, and the unused fetchTargetActivity audit helper. No route
+  rendered any of it; patients open in the modular patient dashboard
+* The printed patient record now has a Flowsheet Assessments section: every
+  flowsheet form's entries, grouped by form, with student name, time and all
+  answers (instructor baselines are marked). Before this, no flowsheet form
+  printed. Older nursing assessment and bowel record sections now appear only
+  when the patient has earlier entries
+* Fixed: BPMH medication lists showed as "[object Object]" in the debrief, and
+  field names ran together (e.g. "ADMITTINGDIAGNOSIS"). Debrief entries now
+  use the form's title and readable field names
+* Fixed: a flowsheet entry made in a patient template before 2026-10-13 was
+  saved as student work, and was copied into two simulation templates.
+  Launched, it would have shown in the debrief under the instructor's name and
+  been deleted by the first reset. The rows and snapshots are corrected, and a
+  database trigger now makes every entry saved in a template a baseline
+  (migration `20261116013352_force_template_flowsheet_baseline.sql`)
+* `registry.test.ts` now fails if any flowsheet form saves under a different
+  type than its card, or doesn't save the student name or baseline flag
+* Fixed: "Reset with template updates" ignored flowsheet baselines added or
+  edited in the template after launch. It now replaces the simulation's
+  flowsheet entries with the template's current baselines, matched to
+  patients by name and date of birth. Patient and medication barcodes are
+  unchanged. Templates saved before flowsheets were captured keep their
+  simulation's baselines (migration
+  `20261116015239_sync_flowsheet_baselines_on_template_reset.sql`)
+* Debriefs now treat names that differ only in capitals, spacing,
+  punctuation or accents as the same student ("J. Smith", "J.Smith" and
+  "j smith" are one person). This merges 11 split students across 10 past
+  debriefs when they are next opened; nothing stored is changed. Numbers
+  still count ("Student 1" and "Student 2" stay separate), and typos are not
+  merged. The history list's participant count uses the same rule. Removed
+  the unused getStudentActivitySummary helper
+* Flowsheet entries can be marked "entered in error". Open a student entry
+  from the form's history strip, choose "Mark as entered in error", and enter
+  your name and a reason. The entry is never edited or deleted: it stays,
+  struck through with the name, reason and time, in the history, the debrief
+  and the printed record, and the student saves a corrected entry. The
+  database only lets signed-in users add the mark, once, to student entries
+  (migration `20261116020506_flowsheet_entered_in_error.sql`). Regenerated
+  `src/types/supabase.ts`
+* Doctor's orders can be marked "entered in error" the same way: name and
+  reason are required. Students can only mark orders a student entered (their
+  phone/verbal orders); instructor-written orders can only be marked by staff
+  (migration `20261116025021_restrict_student_order_error_marks.sql`), the order stays struck through on the order list,
+  Echo, the debrief (credited to the student who marked it) and the printed
+  record, and it no longer counts as a new order. Marking a medication order
+  discontinues its MAR medication: it stays listed with its history but
+  can't be given, and the database refuses any administration of it. Both
+  resets turn such medications back on
+* Security: a student login could edit or delete any doctor's order in its
+  simulation (only the buttons were hidden). The database now lets student
+  and nurse logins only acknowledge orders or mark them in error; staff are
+  unaffected. `verify_rls_isolation.sql` gains check 24 (migration
+  `20261116023618_doctors_orders_entered_in_error.sql`)
+* The order card was extracted from DoctorsOrders.tsx (now under 350 lines)
+
+===============================================================================
+[Unreleased] - 2026-11-16 - SECURITY: TENANT ISOLATION ON FIVE CLINICAL TABLES
+
+* Admission records, advanced directives, patient notes, bowel records and
+  diabetic records could be read, edited or deleted by any signed-in user in
+  any institution. Their access rules compared each row's tenant with itself,
+  so the check always passed
+* They now follow the same rule as patients: an active super admin, or an
+  active member of the record's tenant. Anyone who can see a patient still
+  sees that patient's records, including in debriefs. Diabetic records keep
+  their recorder-only edits and admin/nurse-only deletes
+* `verify_rls_isolation.sql` gains check 21 (no foreign clinical records for a
+  student) and check 22 (no access rule may compare a row's tenant with itself)
+* Migration: `20261116010209_fix_clinical_records_tenant_isolation.sql`
+
+===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 
 * Echo's patient screen now has a bottom tab bar with Meds, Vitals, I&O and

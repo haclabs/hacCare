@@ -39,11 +39,12 @@ import { insertProgressNote } from '../../therapeutic-recreation/hooks/useProgre
 /** Recognizable marker written into every seeded row's name/notes field. */
 export const QA_MARKER = 'QA_VALIDATION';
 
-/** The 15 native flowsheet system_types that share patient_system_assessments. */
+/** The 18 native flowsheet system_types that share patient_system_assessments. */
 const NATIVE_SYSTEM_TYPES = [
   'pain', 'respiratory', 'cardiovascular', 'gastrointestinal', 'genitourinary',
   'musculoskeletal', 'integumentary', 'fall-risk', 'braden-scale', 'restraint',
   'biopsychosocial', 'cognitive', 'mood', 'consent', 'bpmh',
+  'bowel-assessment', 'nursing-assessment', 'admission-assessment',
 ] as const;
 
 export interface SeedDomainResult {
@@ -357,7 +358,7 @@ export async function seedTestDataForTenant(
       })
     ));
 
-    // ── 15 native system assessments (shared patient_system_assessments) ──
+    // ── 18 native system assessments (shared patient_system_assessments) ──
     for (const systemType of NATIVE_SYSTEM_TYPES) {
       results.push(await attempt(`system_assessment:${systemType}`, () =>
         insertSystemAssessment({

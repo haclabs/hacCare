@@ -104,6 +104,17 @@ BEGIN
     RAISE EXCEPTION 'FAIL 6: student sees % foreign handover notes', v_n;
   END IF;
 
+  -- 21. Clinical records outside the student's tenants (20261116010209).
+  SELECT (SELECT count(*) FROM patient_admission_records r WHERE r.tenant_id NOT IN (SELECT public.caller_tenant_ids()))
+       + (SELECT count(*) FROM patient_advanced_directives r WHERE r.tenant_id NOT IN (SELECT public.caller_tenant_ids()))
+       + (SELECT count(*) FROM patient_notes r WHERE r.tenant_id NOT IN (SELECT public.caller_tenant_ids()))
+       + (SELECT count(*) FROM bowel_records r WHERE r.tenant_id NOT IN (SELECT public.caller_tenant_ids()))
+       + (SELECT count(*) FROM diabetic_records r WHERE r.tenant_id NOT IN (SELECT public.caller_tenant_ids()))
+    INTO v_n;
+  IF v_n > 0 THEN
+    RAISE EXCEPTION 'FAIL 21: student sees % clinical records outside their tenants', v_n;
+  END IF;
+
   RESET role;
   RAISE NOTICE 'PASS: all RLS isolation assertions held for student %', v_student;
 END $$;
@@ -132,6 +143,23 @@ BEGIN
     RAISE EXCEPTION 'FAIL 8: permissive policies still present: %', v_bad;
   END IF;
   RAISE NOTICE 'PASS: all permissive policies removed';
+END $$;
+
+-- 22. No policy may compare a row's tenant_id with itself. A subquery like
+-- `(SELECT t.tenant_id FROM user_profiles ...)` on table t reads the outer row,
+-- so the check always passes (20261116010209).
+DO $$
+DECLARE v_bad text;
+BEGIN
+  SELECT string_agg(DISTINCT tablename, ', ') INTO v_bad
+  FROM pg_policies
+  WHERE schemaname = 'public'
+    AND (coalesce(qual, '') ~ ('SELECT ' || tablename || '\.tenant_id')
+      OR coalesce(with_check, '') ~ ('SELECT ' || tablename || '\.tenant_id'));
+  IF v_bad IS NOT NULL THEN
+    RAISE EXCEPTION 'FAIL 22: self-comparing tenant policies on: %', v_bad;
+  END IF;
+  RAISE NOTICE 'PASS: no self-comparing tenant policies';
 END $$;
 
 -- Templates, simulations and history are scoped to their owning institution
@@ -327,6 +355,51 @@ BEGIN
 
   RESET role;
   RAISE NOTICE 'PASS: coordinator confined to institution %', v_inst;
+END $$;
+
+-- 24. A simulation login can't edit or delete a doctor's order, only mark it
+-- entered in error (20261116023618).
+DO $$
+DECLARE
+  v_student uuid;
+  v_order   uuid;
+BEGIN
+  SELECT tu.user_id, o.id INTO v_student, v_order
+  FROM tenant_users tu
+  JOIN user_profiles up ON up.id = tu.user_id
+  JOIN doctors_orders o ON o.tenant_id = tu.tenant_id
+  WHERE up.role = 'student' AND up.is_active AND tu.is_active AND o.entered_in_error_at IS NULL
+    AND public.doctors_order_is_released(o.tenant_id, o.release_after_minutes)
+  LIMIT 1;
+
+  IF v_order IS NULL THEN
+    RAISE NOTICE 'SKIP: no student with a visible doctors order';
+    RETURN;
+  END IF;
+
+  SET LOCAL role authenticated;
+  PERFORM set_config('request.jwt.claims',
+                     json_build_object('sub', v_student, 'role', 'authenticated')::text, true);
+  BEGIN
+    UPDATE doctors_orders SET order_text = order_text || ' (edited)' WHERE id = v_order;
+    RAISE EXCEPTION 'FAIL 24: student % edited doctors order %', v_student, v_order;
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  BEGIN
+    DELETE FROM doctors_orders WHERE id = v_order;
+    RAISE EXCEPTION 'FAIL 24b: student % deleted doctors order %', v_student, v_order;
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  -- 24c. ...nor mark an order a staff member wrote (20261116025021).
+  IF NOT public.user_is_simulation_participant((SELECT created_by FROM doctors_orders WHERE id = v_order)) THEN
+    BEGIN
+      UPDATE doctors_orders SET entered_in_error_by = 'test', entered_in_error_reason = 'test' WHERE id = v_order;
+      RAISE EXCEPTION 'FAIL 24c: student % marked staff order % entered in error', v_student, v_order;
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+  END IF;
+  RESET role;
+  RAISE NOTICE 'PASS: students cannot edit or delete doctors orders';
 END $$;
 
 ROLLBACK;

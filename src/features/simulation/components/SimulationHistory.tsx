@@ -17,6 +17,13 @@ import { formatSessionDuration } from '../utils/formatSessionDuration';
 import { useUserProgramAccess } from '../../../hooks/useUserProgramAccess';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { getLocalTimeZoneAbbreviation } from '../../../utils/time';
+import { StudentNameVariants } from '../../../services/simulation/studentName';
+
+function uniqueStudentNames(activities: Array<{ studentName?: string; totalEntries?: number }>): string[] {
+  const names = new StudentNameVariants();
+  const keys = new Set(activities.filter(a => a.studentName).map(a => names.add(a.studentName!, a.totalEntries || 1)));
+  return [...keys].map(key => names.displayName(key));
+}
 
 type TabType = 'active' | 'archived';
 
@@ -153,11 +160,8 @@ const SimulationHistory: React.FC = () => {
     // Parse student_activities JSON to get unique student names
     try {
       const activities = record.student_activities || [];
-      if (typeof activities === 'string') {
-        const parsed = JSON.parse(activities);
-        return Array.isArray(parsed) ? parsed.length : 0;
-      }
-      return Array.isArray(activities) ? activities.length : 0;
+      const parsed = typeof activities === 'string' ? JSON.parse(activities) : activities;
+      return Array.isArray(parsed) ? uniqueStudentNames(parsed).length : 0;
     } catch {
       return 0;
     }
@@ -172,8 +176,7 @@ const SimulationHistory: React.FC = () => {
         parsed = JSON.parse(activities);
       }
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const names = parsed.map((activity: any) => activity.studentName).filter(Boolean);
-        return names.join(', ');
+        return uniqueStudentNames(parsed).join(', ');
       }
       return 'No participants';
     } catch {

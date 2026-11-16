@@ -143,14 +143,17 @@ In `registry.ts`, change the entry's status:
 
 The card immediately becomes clickable and routes to the form. **No other files need to change for the hub routing to work.**
 
-### Step 4 — Database + debrief wiring (required per project guide)
+### Step 4 — Save the student name and baseline flag (no database wiring)
 
-Follow the 4-part checklist in `.github/copilot-instructions.md` under "CRITICAL: Adding a New Clinical Table":
+Every form writes to the shared `patient_system_assessments` table, which is already wired into
+both reset functions, `simulation_table_config`, the debrief and the printed patient record. A
+new form needs no migration, but its save payload must include:
 
-1. **Reset functions** — add `DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id AND system_type = 'pain'` to both reset functions via a new migration
-2. **`simulation_table_config`** — add a row so template snapshots capture the data
-3. **`studentActivityService.ts`** — add query + processing block for debrief aggregation
-4. **`EnhancedDebriefModal.tsx`** — add render section for the debrief report
+- `system_type: SYSTEM_TYPE`, equal to the card's `systemType` in `registry.ts`
+- `nurse_name: studentName.trim()` from a required student-name field (the debrief drops rows without one)
+- `is_baseline: isBaseline` (the hub passes `true` in template tenants)
+
+`registry.test.ts` fails if a form misses any of these.
 
 ---
 
@@ -162,11 +165,33 @@ The hub works in template editing mode without any special handling. When an ins
 
 Module shortcuts (vitals, HacMap, etc.) are unaffected — they delegate to existing modules that already handle template tenant context.
 
-### Snapshot & Restore
+### Snapshot, Reset, Debrief and Print
 
-Native forms write to `patient_system_assessments` (and any form-specific tables). These tables must be registered in `simulation_table_config` for `save_template_snapshot_v2` to include them in the template baseline.
-
-When `restore_snapshot_to_tenant_v2` runs on session reset, it wipes and restores these tables as part of the standard snapshot restore — no flowsheet-specific code needed, as long as the table is registered.
+- **Baseline vs student work:** entries saved in a template tenant are instructor baselines
+  (`is_baseline = true`). A database trigger enforces this for every template tenant, whatever
+  code path writes the row. Entries saved in a running simulation are student work.
+- **Launch:** `patient_system_assessments` is registered in `simulation_table_config`, so template
+  baselines are copied into the new simulation.
+- **Reset for next session** (`reset_simulation_for_next_session`) deletes student entries
+  (`is_baseline = false`) and keeps the simulation's baselines in place.
+- **Reset with template updates** (`reset_simulation_with_template_updates`) replaces all
+  flowsheet entries with the template's current baselines, so baselines added or edited in the
+  template after launch arrive. Each is attached to the simulation patient with the same first
+  name, last name and date of birth; the patients table is only read, so barcodes never change.
+  Templates whose snapshot predates flowsheet capture (no `patient_system_assessments` key) keep
+  the simulation's baselines and only lose student entries. Re-save such a template to capture
+  its flowsheets.
+- Both leave this table out of the generic snapshot restore so baselines aren't duplicated.
+- **Debrief:** `studentActivityService.ts` reads every non-baseline entry with a `nurse_name`,
+  whatever the form; `DebriefActivityItem.tsx` shows each one under the form's title.
+- **Print:** the printed patient record has a "Flowsheet Assessments" section listing every entry,
+  grouped by form. The debrief and print share the formatting in `assessmentFormat.ts`.
+- **Entered in error:** entries are never edited or deleted. Opening a student entry from a form's
+  history strip offers "Mark as entered in error", which asks for a name and reason. The entry
+  stays, struck through with the name, reason and time, in the history strip, debrief and printed
+  record; the student then saves a corrected entry. Marked entries are skipped when a form looks
+  up the latest entry. A trigger (`guard_system_assessment_update`) lets signed-in users only add
+  the mark, once, to student entries; baselines are corrected in the template instead.
 
 ### `lastRecorded` Timestamps (Not Yet Implemented)
 
@@ -228,15 +253,18 @@ Migration: `database/migrations/history/20260520000000_create_patient_system_ass
 
 ## Current Status
 
-| Category | Ready | Coming Soon |
-|----------|-------|-------------|
-| Monitoring | Vitals, Neuro, Newborn (→ Vitals module) | Pain |
-| Systems | — | Respiratory, Cardiovascular, GI, GU, MSK, Integumentary |
-| Risk & Safety | — | Fall Risk, Braden Scale, Restraint |
-| Wound & Device | Device Placement, Wound (→ HacMap) | — |
-| Fluid & Metabolic | I&O (→ I&O), BBIT (→ MAR), Bowel (→ Forms) | — |
-| Mental Health | — | Biopsychosocial, Cognitive Screening, Mood |
-| Therapeutic Rec | — | 6 TRG assessments |
-| Clinical Docs | Handover, Directives, Nursing/Admission Assessment (→ existing modules) | Consents, BPMH |
+| Category | Native forms | Module shortcuts |
+|----------|--------------|------------------|
+| Monitoring | Pain | Vitals, Neuro, Newborn (→ Vitals module) |
+| Systems | Respiratory, Cardiovascular, GI, GU, MSK, Integumentary | — |
+| Risk & Safety | Fall Risk, Braden Scale, Restraint | — |
+| Wound & Device | — | Device Placement, Wound (→ HacMap) |
+| Fluid & Metabolic | Bowel | I&O (→ I&O), BBIT (→ MAR) |
+| Mental Health | Biopsychosocial, Cognitive Screening, Mood | — |
+| Therapeutic Rec | — | Therapeutic Recreation (→ TR module) |
+| Clinical Docs | Nursing Assessment, Admission Assessment, Consents, BPMH | Handover, Directives |
 
-**12 live (module shortcuts) · 21 coming soon (native forms)**
+**18 native forms · 10 module shortcuts.** Every native form saves a new row in
+`patient_system_assessments` per submission (student name in `nurse_name`).
+`src/features/flowsheets/registry.test.ts` fails if an active native card has no
+entry in `FORM_COMPONENTS`.

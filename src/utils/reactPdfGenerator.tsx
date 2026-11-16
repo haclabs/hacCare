@@ -360,9 +360,14 @@ const formatMedication = (m: Record<string, unknown>): string[] => [
 ];
 
 const formatOrder = (o: Record<string, unknown>): string[] => [
-  `Type: ${o.order_type || 'N/A'}`,
-  String(o.order_text || (o.order_details as Record<string, unknown>)?.medication || 'Order details not available')
-];
+  o.action === 'entered_in_error'
+    ? `MARKED ENTERED IN ERROR — Reason: ${o.entered_in_error_reason}`
+    : `Acknowledged · Type: ${o.order_type || 'N/A'}`,
+  String(o.order_text || (o.order_details as Record<string, unknown>)?.medication || 'Order details not available'),
+  o.action !== 'entered_in_error' && o.entered_in_error_at
+    ? `Later entered in error by ${o.entered_in_error_by}: ${o.entered_in_error_reason}`
+    : null,
+].filter((line): line is string => Boolean(line));
 
 const formatIO = (io: Record<string, unknown>): string[] => [
   `${io.direction === 'intake' ? '↓ IN' : '↑ OUT'} ${String(io.category).toUpperCase()}: ${io.amount_ml} mL`,

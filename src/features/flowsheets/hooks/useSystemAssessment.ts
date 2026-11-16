@@ -25,6 +25,9 @@ import { supabase } from '../../../lib/api/supabase';
 import { queryKeys } from '../../../lib/api/queryClient';
 import type { SaveSystemAssessmentInput, SystemAssessmentRow } from '../types';
 
+const ROW_COLUMNS =
+  'id, patient_id, tenant_id, system_type, assessment_data, nurse_id, nurse_name, is_baseline, recorded_at, created_at, entered_in_error_at, entered_in_error_by, entered_in_error_reason' as const;
+
 // ── Private fetchers (not exported — use hooks below) ─────────────────────────
 
 async function fetchLatestSystemAssessment(
@@ -38,6 +41,7 @@ async function fetchLatestSystemAssessment(
     .eq('patient_id', patientId)
     .eq('tenant_id', tenantId)
     .eq('system_type', systemType)
+    .is('entered_in_error_at', null)
     .order('recorded_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -58,6 +62,22 @@ export async function insertSystemAssessment(
 
   if (error) throw error;
   return data;
+}
+
+/** Every flowsheet entry for a patient, newest first. Used by the printed patient record. */
+export async function fetchPatientSystemAssessments(
+  patientId: string,
+  tenantId: string,
+): Promise<SystemAssessmentRow[]> {
+  const { data, error } = await supabase
+    .from('patient_system_assessments')
+    .select(ROW_COLUMNS)
+    .eq('patient_id', patientId)
+    .eq('tenant_id', tenantId)
+    .order('recorded_at', { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
 }
 
 // ── Public hooks ──────────────────────────────────────────────────────────────
@@ -129,7 +149,7 @@ async function fetchSystemAssessmentHistory(
 ): Promise<SystemAssessmentRow[]> {
   const { data, error } = await supabase
     .from('patient_system_assessments')
-    .select('id, patient_id, tenant_id, system_type, assessment_data, nurse_id, nurse_name, is_baseline, recorded_at, created_at')
+    .select(ROW_COLUMNS)
     .eq('patient_id', patientId)
     .eq('tenant_id', tenantId)
     .eq('system_type', systemType)
@@ -158,4 +178,33 @@ export function useSystemAssessmentHistory(
     enabled: !!patientId && !!tenantId && !!systemType,
     staleTime: 0,
   });
+}
+
+// ── Entered in error ──────────────────────────────────────────────────────────
+
+/**
+ * Marks a student entry as entered in error. The entry is kept and shown
+ * struck through; a database trigger sets the time and refuses edits, baselines
+ * and re-marking.
+ */
+export function useMarkEnteredInError(patientId: string, tenantId: string, systemType: string) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async ({ id, by, reason }: { id: string; by: string; reason: string }) => {
+      const { error } = await supabase
+        .from('patient_system_assessments')
+        .update({ entered_in_error_by: by.trim(), entered_in_error_reason: reason.trim() })
+        .eq('id', id)
+        .eq('tenant_id', tenantId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.systemAssessmentHistory(patientId, tenantId, systemType) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.systemAssessment(patientId, tenantId, systemType) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.systemAssessments(patientId, tenantId) });
+    },
+  });
+
+  return { markEnteredInError: mutation.mutateAsync, isMarking: mutation.isPending };
 }

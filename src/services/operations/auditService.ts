@@ -70,57 +70,6 @@ export const logAction = async (
 };
 
 /**
- * Fetch recent activity for a specific target
- * 
- * @param targetId - ID of the target object
- * @param targetType - Type of the target object
- * @param limit - Maximum number of logs to return
- * @returns Promise resolving to array of audit logs
- */
-export const fetchTargetActivity = async (
-  targetId: string,
-  targetType: string,
-  limit: number = 10
-): Promise<AuditLog[]> => {
-  try {
-    secureLogger.debug(`Fetching activity for ${targetType} ${targetId}`);
-    
-    const { data, error } = await supabase
-      .from('audit_logs')
-      .select(`
-        *,
-        user_profiles:user_id (
-          first_name,
-          last_name
-        )
-      `)
-      .eq('target_id', targetId)
-      .eq('target_type', targetType)
-      .order('timestamp', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      secureLogger.error('Error fetching target activity:', error);
-      return [];
-    }
-
-    // Format the data to include user name
-    const formattedData = data.map(log => ({
-      ...log,
-      user_name: log.user_profiles ? 
-        `${log.user_profiles.first_name} ${log.user_profiles.last_name}` : 
-        'Unknown User'
-    }));
-
-    secureLogger.debug(`Found ${formattedData.length} activity logs`);
-    return formattedData;
-  } catch (error) {
-    secureLogger.error('Error in fetchTargetActivity:', error);
-    return [];
-  }
-};
-
-/**
  * Fetch recent activity for a user
  * 
  * @param userId - ID of the user

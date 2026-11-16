@@ -20,7 +20,7 @@ export const useDoctorsOrdersAlert = (patientId: string, refreshTrigger?: number
       try {
         if (showLoading) setLoading(true);
         const orders = await fetchDoctorsOrders(patientId);
-        const unacknowledgedOrders = orders.filter(order => !order.is_acknowledged);
+        const unacknowledgedOrders = orders.filter(order => !order.is_acknowledged && !order.entered_in_error_at);
         if (!cancelled) setUnacknowledgedCount(unacknowledgedOrders.length);
       } catch (error) {
         secureLogger.error('Error loading doctors orders for alert count', error);

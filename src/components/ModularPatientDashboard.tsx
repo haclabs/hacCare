@@ -21,10 +21,6 @@ import { ModuleContent } from '../features/patients/components/ModuleContent';
 import { usePatientDashboard } from '../features/patients/hooks/usePatientDashboard';
 import { printPatientRecord } from '../utils/patientRecordPrinter';
 import type { Patient } from '../types';
-import { upsertAdmissionRecord, type AdmissionRecord } from '../services/patient/admissionService';
-import { supabase } from '../lib/api/supabase';
-import { createAssessment } from '../services/patient/assessmentService';
-import { createBowelRecord } from '../services/clinical/bowelRecordService';
 import { useTenant } from '../contexts/TenantContext';
 import { PatientWorkspaceMismatch } from '../features/patients/components/PatientWorkspaceMismatch';
 import { useDoctorsOrdersAlert } from '../hooks/useDoctorsOrdersAlert';
@@ -43,7 +39,6 @@ interface ModularPatientDashboardProps {
 type ActiveModule =
   | 'vitals'
   | 'medications'
-  | 'forms'
   | 'overview'
   | 'handover'
   | 'advanced-directives'
@@ -57,7 +52,6 @@ type ActiveModule =
 const MODULE_TITLES: Partial<Record<ActiveModule, string>> = {
   vitals: 'Vitals & Assessments',
   medications: 'Medications',
-  forms: 'Assessments',
   handover: 'Handover Notes',
   'advanced-directives': 'Advanced Directives',
   hacmap: 'hacMap - Device & Wound Care',
@@ -132,97 +126,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (patient) setLocalPatient(patient);
   }, [patient]);
-
-  // ─── Assessment save (stays here: uses currentUser prop + supabase) ────────
-  const handleAssessmentSave = async (assessment: any) => {
-    try {
-      secureLogger.debug('Saving assessment to database:', assessment);
-      secureLogger.debug('Assessment type:', assessment.type);
-
-      if (assessment.type === 'admission-assessment') {
-        const admissionRecord: AdmissionRecord = {
-          patient_id: assessment.patientId,
-          admission_type: assessment.data.admissionType || 'Emergency',
-          chief_complaint: assessment.data.chiefComplaint || '',
-          medical_history: assessment.data.medicalHistory || '',
-          surgical_history: assessment.data.surgicalHistory || '',
-          current_living_arrangements: assessment.data.currentLivingArrangements || '',
-          attending_physician: assessment.data.attendingPhysician || '',
-          insurance_provider: '',
-          insurance_policy: '',
-          admission_source: '',
-          height: '',
-          weight: '',
-          bmi: '',
-          smoking_status: '',
-          alcohol_use: '',
-          exercise: '',
-          occupation: '',
-          family_history: '',
-          marital_status: '',
-          secondary_contact_name: assessment.data.emergencyContactName || '',
-          secondary_contact_relationship: assessment.data.emergencyContactRelationship || '',
-          secondary_contact_phone: assessment.data.emergencyContactPhone || '',
-          secondary_contact_address: '',
-        };
-        await upsertAdmissionRecord(admissionRecord);
-        secureLogger.debug('Admission assessment saved to patient_admission_records');
-
-      } else if (assessment.type === 'nursing-assessment') {
-        const { data: savedNote, error: saveError } = await supabase
-          .from('patient_notes')
-          .insert({
-            patient_id: assessment.patientId,
-            nurse_id: currentUser?.id || '',
-            nurse_name: assessment.submittedBy,
-            type: 'Assessment',
-            content: JSON.stringify(assessment.data),
-            priority: 'Medium',
-          })
-          .select()
-          .single();
-
-        if (saveError) {
-          secureLogger.error('Error saving nursing assessment:', saveError);
-          throw saveError;
-        }
-        secureLogger.debug('Nursing assessment saved to patient_notes:', savedNote);
-
-      } else if (assessment.type === 'bowel-assessment') {
-        await createBowelRecord({
-          patient_id: assessment.patientId,
-          nurse_id: currentUser?.id || '',
-          nurse_name: assessment.submittedBy,
-          recorded_at: assessment.data.recordedAt || new Date().toISOString(),
-          bowel_incontinence: assessment.data.bowelIncontinence || 'Continent',
-          stool_appearance: assessment.data.stoolAppearance || 'Normal',
-          stool_consistency: assessment.data.stoolConsistency || 'Formed',
-          stool_colour: assessment.data.stoolColour || 'Brown',
-          stool_amount: assessment.data.stoolAmount || 'Moderate',
-          notes: assessment.data.notes || '',
-        });
-        secureLogger.debug('Bowel assessment saved to bowel_records');
-
-      } else {
-        await createAssessment({
-          patient_id: assessment.patientId,
-          nurse_id: currentUser?.id || '',
-          nurse_name: assessment.submittedBy,
-          assessment_type: 'physical',
-          assessment_date: new Date().toISOString(),
-          assessment_notes: JSON.stringify(assessment.data),
-          recommendations: '',
-          follow_up_required: false,
-          priority_level: 'routine',
-        });
-        secureLogger.debug('Generic assessment saved to patient_notes');
-      }
-
-      setLastUpdated(new Date());
-    } catch (err) {
-      secureLogger.error('Error saving assessment to database:', err);
-    }
-  };
 
   // ─── Loading / error states ────────────────────────────────────────────────
   if (isLoading) {
@@ -334,7 +237,6 @@ export const ModularPatientDashboard: React.FC<ModularPatientDashboardProps> = (
                 currentUser={currentUser}
                 onPatientUpdate={handlePatientUpdate}
                 onMedicationUpdate={handleMedicationUpdate}
-                onAssessmentSave={handleAssessmentSave}
                 onHandoverRefresh={handleHandoverRefresh}
                 onOrdersChange={handleOrdersChange}
                 onLabsChange={handleLabsChange}

@@ -8,6 +8,7 @@
 
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
+import { StudentNameVariants } from './studentName';
 
 export interface StudentActivity {
   studentName: string;
@@ -95,11 +96,16 @@ interface LabAcknowledgementEntry {
 
 interface DoctorsOrderEntry {
   id: string;
+  /** Time of this student's action (acknowledging, or marking entered in error). */
   acknowledged_at: string;
+  action?: 'acknowledged' | 'entered_in_error';
   order_type: string;
   order_text: string | null;
   order_details: any;
   patient_name?: string;
+  entered_in_error_at?: string | null;
+  entered_in_error_by?: string | null;
+  entered_in_error_reason?: string | null;
 }
 
 interface PatientNoteEntry {
@@ -308,6 +314,9 @@ interface SystemAssessmentEntry {
   nurse_name: string | null;
   assessment_data: Record<string, unknown>;
   patient_name?: string;
+  entered_in_error_at?: string | null;
+  entered_in_error_by?: string | null;
+  entered_in_error_reason?: string | null;
 }
 
 // 🆕 Therapeutic Recreation module — 6 dedicated tables
@@ -567,13 +576,12 @@ export async function getStudentActivitiesBySimulation(
           return result;
         }),
 
-      // Doctor's Orders Acknowledgements (with full order details)
+      // Doctor's orders a student acknowledged or marked entered in error
       supabase
         .from('doctors_orders')
         .select('*')
         .eq('tenant_id', tenantId)
-        .not('acknowledged_by_student', 'is', null)
-        .gt('acknowledged_at', simulationStartTime || '1970-01-01')
+        .or('acknowledged_by_student.not.is.null,entered_in_error_by.not.is.null')
         .order('acknowledged_at', { ascending: false }),
 
       // Patient Notes
@@ -743,7 +751,7 @@ export async function getStudentActivitiesBySimulation(
         .eq('tenant_id', tenantId)
         .not('student_name', 'is', null),
 
-      // 🆕 System Assessments (Flowsheets Hub — 14 native forms, one shared table)
+      // 🆕 System Assessments (Flowsheets Hub — 18 native forms, one shared table)
       supabase
         .from('patient_system_assessments')
         .select('*')
@@ -808,11 +816,11 @@ export async function getStudentActivitiesBySimulation(
 
     // Group all activities by student name
     const studentMap = new Map<string, StudentActivity>();
+    const nameVariants = new StudentNameVariants();
 
     // Helper to initialize student entry
     const getOrCreateStudent = (name: string): StudentActivity => {
-      // Normalize student name: trim whitespace and lowercase for lookup
-      const normalizedName = name.trim().toLowerCase();
+      const normalizedName = nameVariants.add(name);
       const trimmedName = name.trim();
       
       if (!studentMap.has(normalizedName)) {
@@ -971,18 +979,30 @@ export async function getStudentActivitiesBySimulation(
       }
     });
 
-    // Process doctor's orders acknowledgements
+    // Process doctor's orders: acknowledgements and entered-in-error marks are separate actions
+    const sessionStart = new Date(simulationStartTime || 0).getTime();
+    const inSession = (time?: string | null) => !!time && new Date(time).getTime() > sessionStart;
     doctorsOrdersData.data?.forEach((order: any) => {
-      const student = getOrCreateStudent(order.acknowledged_by_student);
-      student.activities.doctorsOrders.push({
+      const base = {
         id: order.id,
-        acknowledged_at: order.acknowledged_at,
         order_type: order.order_type,
         order_text: order.order_text,
         order_details: order.order_details,
         patient_name: patientNameMap.get(order.patient_id),
-      });
-      student.totalEntries++;
+        entered_in_error_at: order.entered_in_error_at,
+        entered_in_error_by: order.entered_in_error_by,
+        entered_in_error_reason: order.entered_in_error_reason,
+      };
+      if (order.acknowledged_by_student && inSession(order.acknowledged_at)) {
+        const student = getOrCreateStudent(order.acknowledged_by_student);
+        student.activities.doctorsOrders.push({ ...base, acknowledged_at: order.acknowledged_at, action: 'acknowledged' });
+        student.totalEntries++;
+      }
+      if (order.entered_in_error_by && inSession(order.entered_in_error_at)) {
+        const student = getOrCreateStudent(order.entered_in_error_by);
+        student.activities.doctorsOrders.push({ ...base, acknowledged_at: order.entered_in_error_at, action: 'entered_in_error' });
+        student.totalEntries++;
+      }
     });
 
     // Process patient notes
@@ -1287,6 +1307,9 @@ export async function getStudentActivitiesBySimulation(
         nurse_name: sa.nurse_name,
         assessment_data: sa.assessment_data,
         patient_name: patientNameMap.get(sa.patient_id),
+        entered_in_error_at: sa.entered_in_error_at,
+        entered_in_error_by: sa.entered_in_error_by,
+        entered_in_error_reason: sa.entered_in_error_reason,
       });
       student.totalEntries++;
     });
@@ -1405,6 +1428,7 @@ export async function getStudentActivitiesBySimulation(
     });
 
     // Convert map to array and sort by total entries
+    studentMap.forEach((student, key) => { student.studentName = nameVariants.displayName(key); });
     const result = Array.from(studentMap.values()).sort((a, b) => b.totalEntries - a.totalEntries);
     
     secureLogger.debug('📊 FINAL RESULT - Total students:', result.length);
@@ -1438,15 +1462,4 @@ export async function getStudentActivitiesBySimulation(
     secureLogger.error('Error fetching student activities:', error);
     throw error;
   }
-}
-
-/**
- * Get activity summary for a specific student in a simulation
- */
-export async function getStudentActivitySummary(
-  simulationId: string,
-  studentName: string
-): Promise<StudentActivity | null> {
-  const allActivities = await getStudentActivitiesBySimulation(simulationId);
-  return allActivities.find(activity => activity.studentName === studentName) || null;
 }

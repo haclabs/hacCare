@@ -21,10 +21,11 @@
  *
  *   FlowsheetsHub, FlowsheetFormWrapper, and all other files stay unchanged.
  *
- * ── Database wiring (required per project guide) ─────────────────────────────
- *   Follow the 4-part checklist in .github/copilot-instructions.md under
- *   "CRITICAL: Adding a New Clinical Table" for reset functions, snapshot
- *   config, studentActivityService, and EnhancedDebriefModal.
+ * ── Database wiring: none ─────────────────────────────────────────────────────
+ *   All forms share patient_system_assessments, which reset, snapshot, debrief
+ *   and print already handle. The form's save payload must include
+ *   system_type (= the card's systemType), nurse_name (required student name)
+ *   and is_baseline: isBaseline — registry.test.ts checks all three.
  */
 
 import React from 'react';
@@ -76,11 +77,20 @@ export const FORM_COMPONENTS: Readonly<Partial<Record<string, LazyFormComponent>
   'biopsychosocial': React.lazy(() =>
     import('./forms/BiopsychosocialAssessmentForm').then(({ BiopsychosocialAssessmentForm }) => ({ default: BiopsychosocialAssessmentForm }))
   ),
-  'cognitive': React.lazy(() =>
+  'cognitive-screening': React.lazy(() =>
     import('./forms/CognitiveScreeningForm').then(({ CognitiveScreeningForm }) => ({ default: CognitiveScreeningForm }))
   ),
-  'mood': React.lazy(() =>
+  'mood-assessment': React.lazy(() =>
     import('./forms/MoodAssessmentForm').then(({ MoodAssessmentForm }) => ({ default: MoodAssessmentForm }))
+  ),
+  'bowel': React.lazy(() =>
+    import('./forms/BowelAssessmentForm').then(({ BowelAssessmentForm }) => ({ default: BowelAssessmentForm }))
+  ),
+  'nursing-assessment': React.lazy(() =>
+    import('./forms/NursingAssessmentForm').then(({ NursingAssessmentForm }) => ({ default: NursingAssessmentForm }))
+  ),
+  'admission-assessment': React.lazy(() =>
+    import('./forms/AdmissionAssessmentForm').then(({ AdmissionAssessmentForm }) => ({ default: AdmissionAssessmentForm }))
   ),
   'consents': React.lazy(() =>
     import('./forms/ConsentForm').then(({ ConsentForm }) => ({ default: ConsentForm }))

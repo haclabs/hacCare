@@ -125,7 +125,7 @@ BEGIN
   -- =====================================================
   
   DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id;
-  UPDATE patient_medications SET last_administered = NULL WHERE tenant_id = v_tenant_id;
+  UPDATE patient_medications SET last_administered = NULL, status = CASE WHEN status = 'Discontinued' THEN 'Active' ELSE status END WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_neuro_assessments WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_notes WHERE tenant_id = v_tenant_id;
@@ -151,8 +151,30 @@ BEGIN
   DELETE FROM devices WHERE tenant_id = v_tenant_id;
   DELETE FROM avatar_locations WHERE tenant_id = v_tenant_id;
 
-  -- 📋 Flowsheet system assessments: delete ONLY student entries (was ON HOLD, now active)
-  DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  -- 📋 Flowsheet system assessments (20261116015239). When the snapshot captured
+  -- flowsheets, replace all rows with the template's baselines, matched to
+  -- simulation patients by name + DOB; patients (and barcodes) are only read.
+  -- Older snapshots without the key: delete student entries only.
+  IF jsonb_typeof(v_snapshot->'patient_system_assessments') = 'array' THEN
+    DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id;
+    INSERT INTO patient_system_assessments (
+      patient_id, tenant_id, system_type, assessment_data,
+      nurse_id, nurse_name, recorded_at, is_baseline
+    )
+    SELECT sp.id, v_tenant_id, e->>'system_type', COALESCE(e->'assessment_data', '{}'::jsonb),
+           NULLIF(e->>'nurse_id', '')::uuid, e->>'nurse_name',
+           COALESCE((e->>'recorded_at')::timestamptz, now()), true
+    FROM jsonb_array_elements(v_snapshot->'patient_system_assessments') e
+    JOIN jsonb_array_elements(v_snapshot->'patients') tp ON tp->>'id' = e->>'patient_id'
+    JOIN patients sp ON sp.tenant_id = v_tenant_id
+                    AND sp.first_name = tp->>'first_name'
+                    AND sp.last_name = tp->>'last_name'
+                    AND sp.date_of_birth = (tp->>'date_of_birth')::date;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RAISE NOTICE 'Flowsheet baselines restored from template: %', v_count;
+  ELSE
+    DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id AND is_baseline = false;
+  END IF;
 
   -- 🧩 TR module tables: delete student entries, preserve instructor baselines
   DELETE FROM tr_screening_entries WHERE tenant_id = v_tenant_id AND is_baseline = false;

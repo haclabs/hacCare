@@ -93,8 +93,14 @@ export interface DoctorsOrder {
   order_link_key?: string | null;
   /** Medication orders: dose as ordered; the linked MAR entry's dosage is the label strength. */
   ordered_dose?: string | null;
+  /** Set when the order is marked entered in error; the order is kept, struck through. */
+  entered_in_error_at?: string | null;
+  entered_in_error_by?: string | null;
+  entered_in_error_reason?: string | null;
   created_by: string; // user ID
   created_by_name?: string; // user name for display
+  /** Role of the order's creator; null when the viewer can't see that profile. */
+  created_by_role?: string | null;
   created_at: string; // ISO timestamp
   updated_by?: string; // user ID
   updated_at?: string; // ISO timestamp

@@ -27,7 +27,6 @@ import type { Patient } from '../../../types';
 type ActiveModule =
   | 'vitals'
   | 'medications'
-  | 'forms'
   | 'overview'
   | 'handover'
   | 'advanced-directives'
@@ -80,7 +79,7 @@ export const ModuleSelector: React.FC<ModuleSelectorProps> = ({
     {
       id: 'vitals' as ActiveModule,
       title: 'Vitals & Assessments',
-      description: 'Vital signs monitoring, neuro/newborn assessments, and clinical documentation forms',
+      description: 'Vital signs monitoring and neuro/newborn assessments',
       icon: Activity,
       iconBg: 'bg-cyan-50',
       iconColor: 'text-cyan-600',
@@ -96,14 +95,6 @@ export const ModuleSelector: React.FC<ModuleSelectorProps> = ({
       iconColor: 'text-emerald-600',
       badge: patient.medications?.length?.toString() || '0',
       badgeTone: 'neutral' as const,
-    },
-    {
-      id: 'forms' as ActiveModule,
-      title: 'Assessments',
-      description: 'Clinical assessment forms and comprehensive documentation',
-      icon: FileText,
-      iconBg: 'bg-purple-50',
-      iconColor: 'text-purple-600',
     },
     {
       id: 'handover' as ActiveModule,
@@ -195,7 +186,7 @@ export const ModuleSelector: React.FC<ModuleSelectorProps> = ({
   const cardOrder = [
     'patient-record', 'advanced-directives', 'hacmap',
     'doctors-orders', 'labs', 'vitals',
-    'handover', 'medications', 'forms',
+    'handover', 'medications',
     'intake-output', 'discharge-summary', 'flowsheets',
   ];
 

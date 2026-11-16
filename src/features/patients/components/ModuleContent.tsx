@@ -11,7 +11,6 @@
 import React, { Suspense } from 'react';
 import { VitalsModule } from '../components/vitals';
 import { MARModule } from '../components/mar';
-import { FormsModule } from '../../forms';
 import { HandoverNotes } from '../components/handover/HandoverNotes';
 import { AdvancedDirectivesForm } from '../components/forms/AdvancedDirectivesForm';
 import { IntakeOutputCard } from '../components/intake-output';
@@ -28,7 +27,6 @@ import type { Patient } from '../../../types';
 type ActiveModule =
   | 'vitals'
   | 'medications'
-  | 'forms'
   | 'overview'
   | 'handover'
   | 'advanced-directives'
@@ -67,7 +65,6 @@ interface ModuleContentProps extends NavProps {
   };
   onPatientUpdate: (data: Partial<Patient>) => void;
   onMedicationUpdate: (medications: any[]) => void;
-  onAssessmentSave: (assessment: any) => void;
   onHandoverRefresh: () => void;
   onOrdersChange?: () => void;
   onLabsChange?: () => void;
@@ -82,7 +79,6 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
   currentUser,
   onPatientUpdate,
   onMedicationUpdate,
-  onAssessmentSave,
   onHandoverRefresh,
   onOrdersChange,
   onLabsChange,
@@ -100,7 +96,6 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
           onPatientUpdate({ vitals });
           onLastUpdated();
         }}
-        onAssessmentSave={onAssessmentSave}
         currentUser={currentUser}
         {...navProps}
       />
@@ -115,16 +110,6 @@ export const ModuleContent: React.FC<ModuleContentProps> = ({
         onMedicationUpdate={onMedicationUpdate}
         currentUser={currentUser}
         {...navProps}
-      />
-    );
-  }
-
-  if (activeModule === 'forms') {
-    return (
-      <FormsModule
-        patient={patient}
-        onAssessmentSave={onAssessmentSave}
-        currentUser={currentUser}
       />
     );
   }

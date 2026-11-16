@@ -20,10 +20,12 @@ const TYPE_BADGE: Record<DoctorsOrder['order_type'], { label: string; className:
 
 const OrderCard: React.FC<{ order: DoctorsOrder; onAcknowledge: () => void }> = ({ order, onAcknowledge }) => {
   const type = TYPE_BADGE[order.order_type] ?? TYPE_BADGE.Direct;
+  const inError = !!order.entered_in_error_at;
+  const strike = inError ? 'line-through decoration-red-400 opacity-70' : '';
   return (
     <li
       className={`rounded-2xl bg-white dark:bg-gray-800 p-4 shadow-md border-l-4 ${
-        order.is_acknowledged ? 'border-green-500' : 'border-red-500'
+        inError ? 'border-gray-400' : order.is_acknowledged ? 'border-green-500' : 'border-red-500'
       }`}
     >
       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
@@ -39,13 +41,21 @@ const OrderCard: React.FC<{ order: DoctorsOrder; onAcknowledge: () => void }> = 
             <Pill className="h-3 w-3" /> On MAR
           </span>
         )}
-        {!order.is_acknowledged && <span className="rounded-full bg-red-600 px-2 py-0.5 text-white">NEW</span>}
+        {inError ? (
+          <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-800">ENTERED IN ERROR</span>
+        ) : (
+          !order.is_acknowledged && <span className="rounded-full bg-red-600 px-2 py-0.5 text-white">NEW</span>
+        )}
       </div>
-      <p className="mt-2 whitespace-pre-line text-lg leading-snug text-gray-900 dark:text-white">{order.order_text}</p>
+      <p className={`mt-2 whitespace-pre-line text-lg leading-snug text-gray-900 dark:text-white ${strike}`}>{order.order_text}</p>
       {order.notes && <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Notes: {order.notes}</p>}
       <p className="mt-2 text-sm font-medium text-gray-600 dark:text-gray-300">Dr. {stripDoctorTitle(order.ordering_doctor)}</p>
 
-      {order.is_acknowledged ? (
+      {inError ? (
+        <p className="mt-3 text-sm text-red-700 dark:text-red-400">
+          Entered in error by {order.entered_in_error_by}: {order.entered_in_error_reason}
+        </p>
+      ) : order.is_acknowledged ? (
         <p className="mt-3 flex items-center gap-1.5 text-sm text-green-700 dark:text-green-400">
           <CheckCircle2 className="h-4 w-4" />
           Acknowledged{order.acknowledged_at ? ` ${new Date(order.acknowledged_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
@@ -77,8 +87,9 @@ export const EchoOrdersTab: React.FC<{ patientId: string }> = ({ patientId }) =>
     refetchInterval: currentTenant?.tenant_type === 'simulation_active' ? SIMULATION_POLL_MS : false,
   });
 
-  const newCount = orders.filter((o) => !o.is_acknowledged).length;
-  const shown = filter === 'new' ? orders.filter((o) => !o.is_acknowledged) : orders;
+  const isNew = (o: DoctorsOrder) => !o.is_acknowledged && !o.entered_in_error_at;
+  const newCount = orders.filter(isNew).length;
+  const shown = filter === 'new' ? orders.filter(isNew) : orders;
 
   const confirmAcknowledge = async (studentName: string) => {
     if (!acknowledging) return;
