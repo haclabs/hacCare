@@ -10,8 +10,8 @@
  *   - empty/null/blank values are skipped entirely
  */
 
-import React from 'react';
-import { Clock, User, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Trash2, User, X } from 'lucide-react';
 import { humanizeKey, isEmptyValue } from '../assessmentFormat';
 import { EnteredInErrorPanel } from './EnteredInErrorPanel';
 
@@ -24,7 +24,39 @@ interface AssessmentDetailModalProps {
   enteredInErrorBy?: string | null;
   enteredInErrorReason?: string | null;
   onMarkEnteredInError?: (by: string, reason: string) => Promise<void>;
+  /** Template baselines only: staff remove a wrong baseline and save a correct one. */
+  onDelete?: () => Promise<void>;
   onClose: () => void;
+}
+
+function DeleteBaselineButton({ onDelete }: { onDelete: () => Promise<void> }) {
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const handleClick = async () => {
+    if (!confirm('Delete this baseline? It will no longer be copied into simulations launched from this template.')) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await onDelete();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not delete this baseline.');
+      setDeleting(false);
+    }
+  };
+  return (
+    <div className="px-6 pb-5">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={deleting}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 hover:text-red-900 disabled:opacity-50"
+      >
+        <Trash2 className="h-4 w-4" /> {deleting ? 'Deleting…' : 'Delete baseline'}
+      </button>
+      <p className="mt-1 text-xs text-gray-500">Delete a wrong baseline, then save the correct one.</p>
+      {error && <p className="mt-1 text-xs font-medium text-red-700">{error}</p>}
+    </div>
+  );
 }
 
 // Local-only keys that should never surface even if they leak into older rows.
@@ -114,6 +146,7 @@ export const AssessmentDetailModal: React.FC<AssessmentDetailModalProps> = ({
   enteredInErrorBy,
   enteredInErrorReason,
   onMarkEnteredInError,
+  onDelete,
   onClose,
 }) => {
   const fields = renderEntries(data);
@@ -166,6 +199,7 @@ export const AssessmentDetailModal: React.FC<AssessmentDetailModalProps> = ({
           reason={enteredInErrorReason}
           onMark={onMarkEnteredInError}
         />
+        {onDelete && <DeleteBaselineButton onDelete={onDelete} />}
       </div>
     </div>
   );

@@ -119,6 +119,10 @@ the tenant providers. `App.tsx` holds the authenticated routes and lazy-loads he
   own institution. Only `super_admin` crosses institutions. Don't add role-only checks for them.
 - RLS policies that query their own table cause infinite recursion. Use a `SECURITY DEFINER`
   function instead of a recursive lookup.
+- **Internal helper functions go in the `private` schema**, not `public`. Everything in `public` is
+  callable over the Data API; `private` isn't exposed (keep it out of `[api] schemas` in
+  `supabase/config.toml` and the dashboard's exposed schemas). Grant `EXECUTE` to `authenticated`
+  only when triggers or policies running as the signed-in user need to call the helper.
 
 ## Rules that cause silent data bugs
 
