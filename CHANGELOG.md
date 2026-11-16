@@ -80,7 +80,9 @@ documented in this file.
   (migration `20261116020506_flowsheet_entered_in_error.sql`). Regenerated
   `src/types/supabase.ts`
 * Doctor's orders can be marked "entered in error" the same way: name and
-  reason are required, the order stays struck through on the order list,
+  reason are required. Students can only mark orders a student entered (their
+  phone/verbal orders); instructor-written orders can only be marked by staff
+  (migration `20261116025021_restrict_student_order_error_marks.sql`), the order stays struck through on the order list,
   Echo, the debrief (credited to the student who marked it) and the printed
   record, and it no longer counts as a new order. Marking a medication order
   discontinues its MAR medication: it stays listed with its history but

@@ -5,7 +5,8 @@
  * - Admin/Super Admin/Coordinator: Full CRUD access
  * - Instructors: Full CRUD in template tenants; add + release delay in simulations
  * - Nurses and students: View, Add (Phone/Verbal orders), and Acknowledge
- * - Everyone outside templates: mark an order as entered in error (kept, struck through)
+ * - Outside templates: staff can mark any order entered in error; students only orders a
+ *   student or nurse login entered (enforced by the guard_doctors_order_change trigger)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -294,7 +295,10 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
                   showReleaseDelay={isStaff}
                   simulationStartsAt={simulationStartsAt}
                   canManage={canManageOrders}
-                  canMarkInError={!isTemplateTenant}
+                  canMarkInError={
+                    !isTemplateTenant &&
+                    (isStaff || order.created_by_role === 'student' || order.created_by_role === 'nurse')
+                  }
                   onAcknowledge={() => handleAcknowledge(order.id)}
                   onEdit={() => handleEdit(order)}
                   onDelete={() => handleDelete(order)}

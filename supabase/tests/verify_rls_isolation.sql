@@ -362,6 +362,14 @@ BEGIN
     RAISE EXCEPTION 'FAIL 24b: student % deleted doctors order %', v_student, v_order;
   EXCEPTION WHEN check_violation THEN NULL;
   END;
+  -- 24c. ...nor mark an order a staff member wrote (20261116025021).
+  IF NOT public.user_is_simulation_participant((SELECT created_by FROM doctors_orders WHERE id = v_order)) THEN
+    BEGIN
+      UPDATE doctors_orders SET entered_in_error_by = 'test', entered_in_error_reason = 'test' WHERE id = v_order;
+      RAISE EXCEPTION 'FAIL 24c: student % marked staff order % entered in error', v_student, v_order;
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+  END IF;
   RESET role;
   RAISE NOTICE 'PASS: students cannot edit or delete doctors orders';
 END $$;

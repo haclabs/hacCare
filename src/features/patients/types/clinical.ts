@@ -99,6 +99,8 @@ export interface DoctorsOrder {
   entered_in_error_reason?: string | null;
   created_by: string; // user ID
   created_by_name?: string; // user name for display
+  /** Role of the order's creator; null when the viewer can't see that profile. */
+  created_by_role?: string | null;
   created_at: string; // ISO timestamp
   updated_by?: string; // user ID
   updated_at?: string; // ISO timestamp

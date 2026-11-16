@@ -84,7 +84,9 @@ Students can't edit or delete a doctor's order or a flowsheet entry. Like on a r
 entry is marked **entered in error** and stays visible, struck through:
 
 - **Doctor's orders:** choose **Mark as entered in error** under the order and enter your name and a
-  reason. If it was a medication order, its medication is **discontinued** on the MAR. It stays
+  reason. Students can only do this for phone/verbal orders a student entered; orders written by an
+  instructor can only be marked by staff (a student who thinks one is wrong should clarify it, as
+  with a real prescriber). If it was a medication order, its medication is **discontinued** on the MAR. It stays
   listed, with its administration history, but shows "Can't be given". Enter the correct order
   afterwards if one is needed
 - **Flowsheets:** open the entry from the form's history strip and choose **Mark as entered in
