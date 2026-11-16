@@ -96,11 +96,16 @@ interface LabAcknowledgementEntry {
 
 interface DoctorsOrderEntry {
   id: string;
+  /** Time of this student's action (acknowledging, or marking entered in error). */
   acknowledged_at: string;
+  action?: 'acknowledged' | 'entered_in_error';
   order_type: string;
   order_text: string | null;
   order_details: any;
   patient_name?: string;
+  entered_in_error_at?: string | null;
+  entered_in_error_by?: string | null;
+  entered_in_error_reason?: string | null;
 }
 
 interface PatientNoteEntry {
@@ -571,13 +576,12 @@ export async function getStudentActivitiesBySimulation(
           return result;
         }),
 
-      // Doctor's Orders Acknowledgements (with full order details)
+      // Doctor's orders a student acknowledged or marked entered in error
       supabase
         .from('doctors_orders')
         .select('*')
         .eq('tenant_id', tenantId)
-        .not('acknowledged_by_student', 'is', null)
-        .gt('acknowledged_at', simulationStartTime || '1970-01-01')
+        .or('acknowledged_by_student.not.is.null,entered_in_error_by.not.is.null')
         .order('acknowledged_at', { ascending: false }),
 
       // Patient Notes
@@ -975,18 +979,30 @@ export async function getStudentActivitiesBySimulation(
       }
     });
 
-    // Process doctor's orders acknowledgements
+    // Process doctor's orders: acknowledgements and entered-in-error marks are separate actions
+    const sessionStart = new Date(simulationStartTime || 0).getTime();
+    const inSession = (time?: string | null) => !!time && new Date(time).getTime() > sessionStart;
     doctorsOrdersData.data?.forEach((order: any) => {
-      const student = getOrCreateStudent(order.acknowledged_by_student);
-      student.activities.doctorsOrders.push({
+      const base = {
         id: order.id,
-        acknowledged_at: order.acknowledged_at,
         order_type: order.order_type,
         order_text: order.order_text,
         order_details: order.order_details,
         patient_name: patientNameMap.get(order.patient_id),
-      });
-      student.totalEntries++;
+        entered_in_error_at: order.entered_in_error_at,
+        entered_in_error_by: order.entered_in_error_by,
+        entered_in_error_reason: order.entered_in_error_reason,
+      };
+      if (order.acknowledged_by_student && inSession(order.acknowledged_at)) {
+        const student = getOrCreateStudent(order.acknowledged_by_student);
+        student.activities.doctorsOrders.push({ ...base, acknowledged_at: order.acknowledged_at, action: 'acknowledged' });
+        student.totalEntries++;
+      }
+      if (order.entered_in_error_by && inSession(order.entered_in_error_at)) {
+        const student = getOrCreateStudent(order.entered_in_error_by);
+        student.activities.doctorsOrders.push({ ...base, acknowledged_at: order.entered_in_error_at, action: 'entered_in_error' });
+        student.totalEntries++;
+      }
     });
 
     // Process patient notes

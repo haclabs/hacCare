@@ -5,23 +5,23 @@
  * - Admin/Super Admin/Coordinator: Full CRUD access
  * - Instructors: Full CRUD in template tenants; add + release delay in simulations
  * - Nurses and students: View, Add (Phone/Verbal orders), and Acknowledge
+ * - Everyone outside templates: mark an order as entered in error (kept, struck through)
  */
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Check, Clock, Phone, MessageSquare, FileText, Pill } from 'lucide-react';
+import { Plus, FileText } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DoctorsOrder } from '../../../types';
-import { fetchDoctorsOrders, acknowledgeDoctorsOrder } from '../../../services/clinical/doctorsOrdersService';
+import { fetchDoctorsOrders, acknowledgeDoctorsOrder, markDoctorsOrderEnteredInError } from '../../../services/clinical/doctorsOrdersService';
 import { deleteOrderWithMedication } from '../../../services/clinical/medicationOrderService';
 import { StudentAcknowledgeModal } from '../../../components/modals/StudentAcknowledgeModal';
 import { PatientActionBar } from '../../../components/PatientActionBar';
 import { secureLogger } from '../../../lib/security/secureLogger';
 import { useTenant } from '../../../contexts/TenantContext';
 import { useSimulationStartsAt } from '../../simulation/hooks/useSimulationStartsAt';
-import { ReleaseDelayBadge } from './DoctorsOrderRelease';
 import { DoctorsOrderForm } from './DoctorsOrderForm';
-import { stripDoctorTitle } from '../utils/doctorName';
-import { formatLocalDate } from '../utils/localDate';
+import { DoctorsOrderCard } from './DoctorsOrderCard';
+import { OrderEnteredInErrorModal } from './OrderEnteredInErrorModal';
 import { queryKeys } from '../../../lib/api/queryClient';
 import { canManageMedicationOrders } from './mar/medicationPermissions';
 
@@ -79,6 +79,7 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
   const [editingOrder, setEditingOrder] = useState<DoctorsOrder | null>(null);
   const [error, setError] = useState('');
   const [acknowledgingOrderId, setAcknowledgingOrderId] = useState<string | null>(null);
+  const [markingOrder, setMarkingOrder] = useState<DoctorsOrder | null>(null);
 
   // Check if user has admin privileges
   const isAdmin = ['admin', 'coordinator', 'super_admin'].includes(currentUser.role);
@@ -188,32 +189,22 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
     }
   };
 
+  const confirmMarkInError = async (studentName: string, reason: string) => {
+    if (!markingOrder) return;
+    await markDoctorsOrderEnteredInError(markingOrder, studentName, reason);
+    setOrders(await fetchDoctorsOrders(patientId));
+    if (markingOrder.order_link_key) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.patientMedicationOrders(patientId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.patientMedications(patientId) });
+    }
+    setMarkingOrder(null);
+    onOrdersChange?.();
+  };
+
   const cancelForm = () => {
     setShowAddForm(false);
     setEditingOrder(null);
     setError('');
-  };
-
-  const getOrderTypeIcon = (orderType: string) => {
-    switch (orderType) {
-      case 'Phone Order':
-        return <Phone className="h-4 w-4 text-blue-600" />;
-      case 'Verbal Order':
-        return <MessageSquare className="h-4 w-4 text-green-600" />;
-      default:
-        return <FileText className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
-  const getOrderTypeColor = (orderType: string) => {
-    switch (orderType) {
-      case 'Phone Order':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Verbal Order':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
   };
 
   return (
@@ -297,129 +288,29 @@ export const DoctorsOrders: React.FC<DoctorsOrdersProps> = ({
           ) : (
             <div className="space-y-4">
               {orders.map((order) => (
-                <div
+                <DoctorsOrderCard
                   key={order.id}
-                  className={`border rounded-lg p-4 ${
-                    order.is_acknowledged 
-                      ? 'bg-green-50 border-green-200' 
-                      : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      {/* Header with date/time and type */}
-                      <div className="flex items-center space-x-3 mb-2">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm font-medium text-gray-900">
-                            {formatLocalDate(order.order_date)} at {order.order_time}
-                          </span>
-                        </div>
-                        
-                        <div className={`inline-flex items-center px-2 py-1 rounded-full border text-xs font-medium space-x-1 ${getOrderTypeColor(order.order_type)}`}>
-                          {getOrderTypeIcon(order.order_type)}
-                          <span>{order.order_type}</span>
-                        </div>
-
-                        {isStaff && (
-                          <ReleaseDelayBadge
-                            releaseAfterMinutes={order.release_after_minutes}
-                            simulationStartsAt={simulationStartsAt}
-                          />
-                        )}
-
-                        {order.order_link_key && (
-                          <div className="inline-flex items-center px-2 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-800 text-xs font-medium space-x-1">
-                            <Pill className="h-3 w-3" />
-                            <span>Medication order · on MAR</span>
-                          </div>
-                        )}
-
-                        {!order.is_acknowledged ? (
-                          <div className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-800 border-red-200 text-xs font-bold space-x-1 animate-pulse">
-                            <span>NEW</span>
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-800 border-green-200 text-xs font-medium space-x-1">
-                            <Check className="h-3 w-3" />
-                            <span>ACKNOWLEDGED</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Doctor */}
-                      <div className="mb-2">
-                        <span className="text-sm font-medium text-gray-700">Dr. {stripDoctorTitle(order.ordering_doctor)}</span>
-                      </div>
-
-                      {/* Order text */}
-                      <div className="mb-3">
-                        <p className="text-gray-900 leading-relaxed whitespace-pre-line">{order.order_text}</p>
-                      </div>
-
-                      {/* Notes */}
-                      {order.notes && (
-                        <div className="mb-3">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Notes:</span> {order.notes}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Footer info */}
-                      <div className="text-xs text-gray-500 space-y-1">
-                        <div>
-                          Created by {order.doctor_name ? `${order.doctor_name} (via ${order.created_by_name})` : order.created_by_name} on {new Date(order.created_at).toLocaleString()}
-                        </div>
-                        {order.is_acknowledged && order.acknowledged_by_name && (
-                          <div>
-                            Acknowledged by {order.acknowledged_by_name} on {new Date(order.acknowledged_at!).toLocaleString()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center space-x-2 ml-4">
-                      {/* Acknowledge Button - Only for nurses on unacknowledged orders */}
-                      {!order.is_acknowledged && (
-                        <button
-                          onClick={() => handleAcknowledge(order.id)}
-                          className="flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-                          title="Acknowledge Order"
-                        >
-                          <Check className="h-3 w-3" />
-                          <span>Acknowledge</span>
-                        </button>
-                      )}
-
-                      {/* Edit Button */}
-                      {canManageOrders && (
-                        <button
-                          onClick={() => handleEdit(order)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          title="Edit Order"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                      )}
-
-                      {/* Delete Button */}
-                      {canManageOrders && (
-                        <button
-                          onClick={() => handleDelete(order)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          title="Delete Order"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                  order={order}
+                  showReleaseDelay={isStaff}
+                  simulationStartsAt={simulationStartsAt}
+                  canManage={canManageOrders}
+                  canMarkInError={!isTemplateTenant}
+                  onAcknowledge={() => handleAcknowledge(order.id)}
+                  onEdit={() => handleEdit(order)}
+                  onDelete={() => handleDelete(order)}
+                  onMarkInError={() => setMarkingOrder(order)}
+                />
               ))}
             </div>
           )}
+
+      {markingOrder && (
+        <OrderEnteredInErrorModal
+          order={markingOrder}
+          onConfirm={confirmMarkInError}
+          onCancel={() => setMarkingOrder(null)}
+        />
+      )}
 
       {/* Student Acknowledge Modal */}
       {acknowledgingOrderId && (

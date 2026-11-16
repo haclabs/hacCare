@@ -79,6 +79,19 @@ documented in this file.
   database only lets signed-in users add the mark, once, to student entries
   (migration `20261116020506_flowsheet_entered_in_error.sql`). Regenerated
   `src/types/supabase.ts`
+* Doctor's orders can be marked "entered in error" the same way: name and
+  reason are required, the order stays struck through on the order list,
+  Echo, the debrief (credited to the student who marked it) and the printed
+  record, and it no longer counts as a new order. Marking a medication order
+  discontinues its MAR medication: it stays listed with its history but
+  can't be given, and the database refuses any administration of it. Both
+  resets turn such medications back on
+* Security: a student login could edit or delete any doctor's order in its
+  simulation (only the buttons were hidden). The database now lets student
+  and nurse logins only acknowledge orders or mark them in error; staff are
+  unaffected. `verify_rls_isolation.sql` gains check 24 (migration
+  `20261116023618_doctors_orders_entered_in_error.sql`)
+* The order card was extracted from DoctorsOrders.tsx (now under 350 lines)
 ===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 

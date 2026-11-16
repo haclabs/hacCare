@@ -329,4 +329,41 @@ BEGIN
   RAISE NOTICE 'PASS: coordinator confined to institution %', v_inst;
 END $$;
 
+-- 24. A simulation login can't edit or delete a doctor's order, only mark it
+-- entered in error (20261116023618).
+DO $$
+DECLARE
+  v_student uuid;
+  v_order   uuid;
+BEGIN
+  SELECT tu.user_id, o.id INTO v_student, v_order
+  FROM tenant_users tu
+  JOIN user_profiles up ON up.id = tu.user_id
+  JOIN doctors_orders o ON o.tenant_id = tu.tenant_id
+  WHERE up.role = 'student' AND up.is_active AND tu.is_active AND o.entered_in_error_at IS NULL
+    AND public.doctors_order_is_released(o.tenant_id, o.release_after_minutes)
+  LIMIT 1;
+
+  IF v_order IS NULL THEN
+    RAISE NOTICE 'SKIP: no student with a visible doctors order';
+    RETURN;
+  END IF;
+
+  SET LOCAL role authenticated;
+  PERFORM set_config('request.jwt.claims',
+                     json_build_object('sub', v_student, 'role', 'authenticated')::text, true);
+  BEGIN
+    UPDATE doctors_orders SET order_text = order_text || ' (edited)' WHERE id = v_order;
+    RAISE EXCEPTION 'FAIL 24: student % edited doctors order %', v_student, v_order;
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  BEGIN
+    DELETE FROM doctors_orders WHERE id = v_order;
+    RAISE EXCEPTION 'FAIL 24b: student % deleted doctors order %', v_student, v_order;
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  RESET role;
+  RAISE NOTICE 'PASS: students cannot edit or delete doctors orders';
+END $$;
+
 ROLLBACK;

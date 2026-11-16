@@ -78,14 +78,27 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
             })()}
           </div>
         );
-      case 'doctorsOrders':
+      case 'doctorsOrders': {
+        const marked = item.action === 'entered_in_error';
+        const voided = !!item.entered_in_error_at;
         return (
           <div className="text-sm">
             <p className="font-medium text-gray-700">{format(new Date(item.acknowledged_at), 'PPp')}</p>
-            <p className="text-gray-900 mt-1 font-medium">✓ ACKNOWLEDGED</p>
-            <p className="text-gray-600 whitespace-pre-wrap">{item.order_text || item.order_type}</p>
+            <p className={`mt-1 font-medium ${marked ? 'text-red-700' : 'text-gray-900'}`}>
+              {marked ? '✗ MARKED ENTERED IN ERROR' : '✓ ACKNOWLEDGED'}
+            </p>
+            <p className={`text-gray-600 whitespace-pre-wrap ${voided ? 'line-through decoration-red-400' : ''}`}>
+              {item.order_text || item.order_type}
+            </p>
+            {marked && <p className="mt-1 text-xs text-red-700">Reason: {String(item.entered_in_error_reason)}</p>}
+            {!marked && voided && (
+              <p className="mt-1 text-xs text-red-700">
+                Later entered in error by {String(item.entered_in_error_by)}: {String(item.entered_in_error_reason)}
+              </p>
+            )}
           </div>
         );
+      }
       case 'intakeOutput':
         return (
           <div className="text-sm">

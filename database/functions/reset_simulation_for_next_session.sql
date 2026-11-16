@@ -116,7 +116,7 @@ BEGIN
   
   -- 🔄 Reset medication administration timing (for back-to-back sessions)
   UPDATE patient_medications
-  SET last_administered = NULL
+  SET last_administered = NULL, status = CASE WHEN status = 'Discontinued' THEN 'Active' ELSE status END
   WHERE tenant_id = v_tenant_id;
   GET DIAGNOSTICS v_count = ROW_COUNT;
   RAISE NOTICE '🔄 Reset % medication administration times for new session', v_count;

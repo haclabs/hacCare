@@ -388,15 +388,19 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
 
             ${ordersData && ordersData.length > 0 ? `
             <div class="form-section">
-              <div class="section-header">Active Doctors Orders</div>
+              <div class="section-header">Doctors Orders</div>
               <div class="section-content">
                 <table class="medication-table">
                   <thead><tr><th>Date</th><th>Time</th><th>Order Text</th><th>Type</th><th>Status</th></tr></thead>
                   <tbody>
                     ${ordersData.slice(0, 10).map(order => `
                       <tr>
-                        <td>${e(order.order_date)}</td><td>${e(order.order_time)}</td><td>${e(order.order_text)}</td><td>${e(order.order_type)}</td>
-                        <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;background:${order.is_acknowledged ? '#d1fae5' : '#fee2e2'};color:${order.is_acknowledged ? '#065f46' : '#dc2626'};"> ${order.is_acknowledged ? 'Acknowledged' : 'Pending'}</span></td>
+                        <td>${e(order.order_date)}</td><td>${e(order.order_time)}</td>
+                        <td>${order.entered_in_error_at
+                          ? `<span style="text-decoration:line-through;color:#6b7280;">${e(order.order_text)}</span><div style="color:#b91c1c;font-weight:bold;font-size:11px;">ENTERED IN ERROR — ${e(order.entered_in_error_by)}, ${e(new Date(order.entered_in_error_at).toLocaleString())}: ${e(order.entered_in_error_reason)}</div>`
+                          : e(order.order_text)}</td>
+                        <td>${e(order.order_type)}</td>
+                        <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;background:${order.entered_in_error_at ? '#f3f4f6' : order.is_acknowledged ? '#d1fae5' : '#fee2e2'};color:${order.entered_in_error_at ? '#6b7280' : order.is_acknowledged ? '#065f46' : '#dc2626'};"> ${order.entered_in_error_at ? 'Entered in error' : order.is_acknowledged ? 'Acknowledged' : 'Pending'}</span></td>
                       </tr>`).join('')}
                   </tbody>
                 </table>

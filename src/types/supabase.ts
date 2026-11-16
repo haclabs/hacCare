@@ -534,6 +534,9 @@ export type Database = {
           created_at: string | null
           created_by: string
           doctor_name: string | null
+          entered_in_error_at: string | null
+          entered_in_error_by: string | null
+          entered_in_error_reason: string | null
           id: string
           is_acknowledged: boolean | null
           notes: string | null
@@ -557,6 +560,9 @@ export type Database = {
           created_at?: string | null
           created_by: string
           doctor_name?: string | null
+          entered_in_error_at?: string | null
+          entered_in_error_by?: string | null
+          entered_in_error_reason?: string | null
           id?: string
           is_acknowledged?: boolean | null
           notes?: string | null
@@ -580,6 +586,9 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           doctor_name?: string | null
+          entered_in_error_at?: string | null
+          entered_in_error_by?: string | null
+          entered_in_error_reason?: string | null
           id?: string
           is_acknowledged?: boolean | null
           notes?: string | null
@@ -4931,10 +4940,9 @@ export type Database = {
         Returns: boolean
       }
       caller_is_service_context: { Args: never; Returns: boolean }
-      caller_is_simulation_participant: {
-        Args: { p_simulation_id: string }
-        Returns: boolean
-      }
+      caller_is_simulation_participant:
+        | { Args: never; Returns: boolean }
+        | { Args: { p_simulation_id: string }; Returns: boolean }
       caller_may_administer_tenant: {
         Args: { p_tenant_id: string }
         Returns: boolean
@@ -5134,6 +5142,10 @@ export type Database = {
         Returns: Json
       }
       mark_welcome_seen: { Args: never; Returns: string }
+      order_linked_medication_exists: {
+        Args: { p_order_link_key: string; p_tenant_id: string }
+        Returns: boolean
+      }
       program_institution: { Args: { p_program_id: string }; Returns: string }
       reactivate_user: { Args: { target_user_id: string }; Returns: string }
       reassign_user_tenant: {
@@ -5197,6 +5209,7 @@ export type Database = {
         Args: { p_template_id: string }
         Returns: string
       }
+      tenant_is_template: { Args: { p_tenant_id: string }; Returns: boolean }
       update_template_state_snapshot: {
         Args: { p_state_id: string; p_template_id: string }
         Returns: Json

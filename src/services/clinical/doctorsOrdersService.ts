@@ -75,6 +75,9 @@ export const fetchDoctorsOrders = async (patientId: string): Promise<DoctorsOrde
       release_after_minutes: order.release_after_minutes ?? null,
       order_link_key: order.order_link_key ?? null,
       ordered_dose: order.ordered_dose ?? null,
+      entered_in_error_at: order.entered_in_error_at ?? null,
+      entered_in_error_by: order.entered_in_error_by ?? null,
+      entered_in_error_reason: order.entered_in_error_reason ?? null,
       doctor_name: order.doctor_name,
       created_by: order.created_by,
       created_by_name: order.created_by_profile 
@@ -147,6 +150,9 @@ export const createDoctorsOrder = async (orderData: CreateDoctorsOrderData): Pro
       release_after_minutes: data.release_after_minutes ?? null,
       order_link_key: data.order_link_key ?? null,
       ordered_dose: data.ordered_dose ?? null,
+      entered_in_error_at: data.entered_in_error_at ?? null,
+      entered_in_error_by: data.entered_in_error_by ?? null,
+      entered_in_error_reason: data.entered_in_error_reason ?? null,
       doctor_name: data.doctor_name,
       created_by: data.created_by,
       created_by_name: data.created_by_profile 
@@ -212,6 +218,9 @@ export const updateDoctorsOrder = async (orderId: string, orderData: UpdateDocto
       release_after_minutes: data.release_after_minutes ?? null,
       order_link_key: data.order_link_key ?? null,
       ordered_dose: data.ordered_dose ?? null,
+      entered_in_error_at: data.entered_in_error_at ?? null,
+      entered_in_error_by: data.entered_in_error_by ?? null,
+      entered_in_error_reason: data.entered_in_error_reason ?? null,
       created_by: data.created_by,
       created_by_name: data.created_by_profile 
         ? `${data.created_by_profile.first_name} ${data.created_by_profile.last_name}`
@@ -299,6 +308,9 @@ export const acknowledgeDoctorsOrder = async (orderId: string, studentName?: str
       release_after_minutes: data.release_after_minutes ?? null,
       order_link_key: data.order_link_key ?? null,
       ordered_dose: data.ordered_dose ?? null,
+      entered_in_error_at: data.entered_in_error_at ?? null,
+      entered_in_error_by: data.entered_in_error_by ?? null,
+      entered_in_error_reason: data.entered_in_error_reason ?? null,
       created_by: data.created_by,
       created_by_name: data.created_by_profile 
         ? `${data.created_by_profile.first_name} ${data.created_by_profile.last_name}`
@@ -309,6 +321,27 @@ export const acknowledgeDoctorsOrder = async (orderId: string, studentName?: str
     };
   } catch (error) {
     secureLogger.error('Error in acknowledgeDoctorsOrder:', error);
+    throw error;
+  }
+};
+
+/**
+ * Marks an order as entered in error. The order is kept and shown struck
+ * through; a medication order's MAR medication is discontinued. A database
+ * trigger sets the time and refuses re-marking or any other change.
+ */
+export const markDoctorsOrderEnteredInError = async (
+  order: Pick<DoctorsOrder, 'id' | 'tenant_id'>,
+  studentName: string,
+  reason: string
+): Promise<void> => {
+  const { error } = await supabase
+    .from('doctors_orders')
+    .update({ entered_in_error_by: studentName.trim(), entered_in_error_reason: reason.trim() })
+    .eq('id', order.id)
+    .eq('tenant_id', order.tenant_id);
+  if (error) {
+    secureLogger.error('Error marking doctors order entered in error:', error);
     throw error;
   }
 };

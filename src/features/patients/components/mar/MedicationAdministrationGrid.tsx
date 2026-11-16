@@ -152,13 +152,20 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
     const shouldAlert =
       category === 'scheduled' || category === 'continuous' || category === 'diabetic';
     const linkedOrder = medication.order_link_key ? ordersByKey?.get(medication.order_link_key) : undefined;
+    // Set when its order was marked entered in error; kept for its history but can't be given
+    const discontinued = medication.status === 'Discontinued';
 
     return (
       <div key={medication.id} className="p-4 md:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0 md:flex-1">
             <div className="flex flex-wrap items-center gap-2 md:gap-3">
-              <h4 className="text-lg font-medium text-gray-900 dark:text-white">{medication.name}</h4>
+              <h4 className={`text-lg font-medium text-gray-900 dark:text-white ${discontinued ? 'line-through decoration-red-400 opacity-70' : ''}`}>{medication.name}</h4>
+              {discontinued && (
+                <span className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200">
+                  DISCONTINUED · order entered in error
+                </span>
+              )}
               {category !== 'continuous' && (
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -184,7 +191,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                     : category}
                 </span>
               )}
-              {shouldAlert && isDue && category !== 'scheduled' && (
+              {!discontinued && shouldAlert && isDue && category !== 'scheduled' && (
 
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${
@@ -236,6 +243,11 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
             </div>
 
             <div className="flex gap-2">
+              {discontinued ? (
+                <span className="flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-center">
+                  Can't be given
+                </span>
+              ) : (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -253,6 +265,7 @@ export const MedicationAdministrationGrid: React.FC<MedicationAdministrationGrid
                 <QrCode className="h-4 w-4" />
                 <span>{category === 'prn' ? 'Give PRN' : 'Administer'}</span>
               </button>
+              )}
 
               {canManageMedications && (
                 <>

@@ -125,7 +125,7 @@ BEGIN
   -- =====================================================
   
   DELETE FROM medication_administrations WHERE tenant_id = v_tenant_id;
-  UPDATE patient_medications SET last_administered = NULL WHERE tenant_id = v_tenant_id;
+  UPDATE patient_medications SET last_administered = NULL, status = CASE WHEN status = 'Discontinued' THEN 'Active' ELSE status END WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_vitals WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_neuro_assessments WHERE tenant_id = v_tenant_id;
   DELETE FROM patient_notes WHERE tenant_id = v_tenant_id;
