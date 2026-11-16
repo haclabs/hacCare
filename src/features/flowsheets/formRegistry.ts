@@ -21,10 +21,11 @@
  *
  *   FlowsheetsHub, FlowsheetFormWrapper, and all other files stay unchanged.
  *
- * ── Database wiring (required per project guide) ─────────────────────────────
- *   Follow the 4-part checklist in .github/copilot-instructions.md under
- *   "CRITICAL: Adding a New Clinical Table" for reset functions, snapshot
- *   config, studentActivityService, and EnhancedDebriefModal.
+ * ── Database wiring: none ─────────────────────────────────────────────────────
+ *   All forms share patient_system_assessments, which reset, snapshot, debrief
+ *   and print already handle. The form's save payload must include
+ *   system_type (= the card's systemType), nurse_name (required student name)
+ *   and is_baseline: isBaseline — registry.test.ts checks all three.
  */
 
 import React from 'react';

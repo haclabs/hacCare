@@ -12,6 +12,8 @@ import { fetchPatientBowelRecords } from '../services/clinical/bowelRecordServic
 import { fetchAdmissionRecord, fetchAdvancedDirective } from '../services/patient/admissionService';
 import { fetchDoctorsOrders } from '../services/clinical/doctorsOrdersService';
 import { getLabPanels, getLabResults } from '../services/clinical/labService';
+import { fetchPatientSystemAssessments } from '../features/flowsheets/hooks/useSystemAssessment';
+import { renderFlowsheetSection } from './flowsheetPrintSection';
 import type { LabPanel, LabResult } from '../features/patients/types/labs';
 import type { Patient } from '../types';
 import { secureLogger } from '../lib/security/secureLogger';
@@ -30,7 +32,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
   try {
     secureLogger.debug(`Fetching data for patient record: ${patient.id}, tenant: ${tenantId}`);
 
-    const [vitalsData, medicationsData, assessmentsData, bowelRecordsData, admissionData, directiveData, ordersData, labPanelsResponse] = await Promise.all([
+    const [vitalsData, medicationsData, assessmentsData, bowelRecordsData, admissionData, directiveData, ordersData, labPanelsResponse, flowsheetData] = await Promise.all([
       fetchPatientVitals(patient.id),
       fetchPatientMedications(patient.id),
       fetchPatientAssessments(patient.id),
@@ -39,6 +41,10 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
       fetchAdvancedDirective(patient.id),
       fetchDoctorsOrders(patient.id),
       getLabPanels(patient.id, tenantId),
+      fetchPatientSystemAssessments(patient.id, tenantId).catch(error => {
+        secureLogger.error('Error fetching flowsheet assessments for print:', error);
+        return null;
+      }),
     ]);
 
     const labPanelsData = labPanelsResponse.data || [];
@@ -320,7 +326,7 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
 
                   ${assessmentsData.length > 0 ? `
                     <div class="note-entry" style="background:#f0f9ff;border-color:#3b82f6;">
-                      <div class="note-header" style="color:#1e40af;">📋 Nursing Assessments (${assessmentsData.length} on file)</div>
+                      <div class="note-header" style="color:#1e40af;">📋 Earlier Nursing Assessments (${assessmentsData.length} on file)</div>
                       <div class="note-content">
                         ${assessmentsData.map((assessment, idx) => {
                           let parsedData: any = null;
@@ -361,11 +367,11 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                           }
                         }).join('')}
                       </div>
-                    </div>` : '<div class="note-entry"><div class="note-content" style="text-align:center;font-style:italic;">No nursing assessments recorded</div></div>'}
+                    </div>` : ''}
 
                   ${bowelRecordsData.length > 0 ? `
                     <div class="note-entry" style="background:#f0fdf4;border-color:#22c55e;">
-                      <div class="note-header" style="color:#166534;">📊 Bowel Records (${bowelRecordsData.length} on file)</div>
+                      <div class="note-header" style="color:#166534;">📊 Earlier Bowel Records (${bowelRecordsData.length} on file)</div>
                       <div class="note-content">
                         <strong>Latest:</strong> ${e(new Date(bowelRecordsData[0].recorded_at).toLocaleString())}<br>
                         <strong>Continence:</strong> ${e(bowelRecordsData[0].bowel_incontinence)} | <strong>Appearance:</strong> ${e(bowelRecordsData[0].stool_appearance)}<br>
@@ -373,10 +379,12 @@ export async function printPatientRecord(patient: Patient, tenantId: string): Pr
                         ${bowelRecordsData[0].notes ? `<br><strong>Notes:</strong> ${e(bowelRecordsData[0].notes)}` : ''}
                       </div>
                       <div class="note-meta">Recorded by: ${e(bowelRecordsData[0].nurse_name)}</div>
-                    </div>` : '<div class="note-entry"><div class="note-content" style="text-align:center;font-style:italic;">No bowel records documented</div></div>'}
+                    </div>` : ''}
                 </div>
               </div>
             </div>
+
+            ${renderFlowsheetSection(flowsheetData)}
 
             ${ordersData && ordersData.length > 0 ? `
             <div class="form-section">

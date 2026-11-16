@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
+import { assessmentEntries, flowsheetTitle } from '../../flowsheets/assessmentFormat';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item, sectionKey }) => {
@@ -569,13 +570,21 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
         );
       }
       case 'systemAssessments': {
-        const label = (item.system_type as string)?.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
-        const data = item.assessment_data as Record<string, unknown> | null;
-        const entries = data ? Object.entries(data).filter(([, v]) => v !== null && v !== undefined && v !== '') : [];
+        const entries = assessmentEntries(item.assessment_data as Record<string, unknown> | null);
+        const fields = (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+            {entries.map(({ key, label, value }) => (
+              <div key={key} className={`flex flex-col ${value.length > 60 ? 'col-span-2' : ''}`}>
+                <span className="font-semibold text-sky-400 uppercase tracking-wide mb-0.5">{label}</span>
+                <span className="text-sky-900 font-medium whitespace-pre-wrap">{value}</span>
+              </div>
+            ))}
+          </div>
+        );
         return (
           <div className="text-sm">
             <p className="font-medium text-gray-700">{item.recorded_at ? format(new Date(item.recorded_at), 'PPp') : 'N/A'}</p>
-            <p className="text-gray-900 mt-1 font-medium">🗂️ {label}</p>
+            <p className="text-gray-900 mt-1 font-medium">🗂️ {flowsheetTitle(String(item.system_type ?? ''))}</p>
             {entries.length > 0 && (
               <div className="mt-2">
                 <button
@@ -592,36 +601,10 @@ export const ActivityItem: React.FC<{ item: any; sectionKey: string }> = ({ item
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                {(showAssessmentData) && (
-                  <div className="mt-2 p-3 bg-sky-50 rounded-lg border border-sky-200">
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                      {entries.map(([key, value]) => (
-                        <div key={key} className="flex flex-col">
-                          <span className="font-semibold text-sky-400 uppercase tracking-wide mb-0.5">{key.replace(/_/g, ' ')}</span>
-                          <span className="text-sky-900 font-medium">
-                            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') :
-                             Array.isArray(value) ? value.join(', ') :
-                             value?.toString() || '—'}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                {showAssessmentData && (
+                  <div className="mt-2 p-3 bg-sky-50 rounded-lg border border-sky-200 print:hidden">{fields}</div>
                 )}
-                <div className="hidden print:block mt-2 p-3 bg-sky-50 rounded-lg border border-sky-200">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                    {entries.map(([key, value]) => (
-                      <div key={key} className="flex flex-col">
-                        <span className="font-semibold text-sky-400 uppercase tracking-wide mb-0.5">{key.replace(/_/g, ' ')}</span>
-                        <span className="text-sky-900 font-medium">
-                          {typeof value === 'boolean' ? (value ? 'Yes' : 'No') :
-                           Array.isArray(value) ? value.join(', ') :
-                           value?.toString() || '—'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <div className="hidden print:block mt-2 p-3 bg-sky-50 rounded-lg border border-sky-200">{fields}</div>
               </div>
             )}
           </div>

@@ -60,6 +60,22 @@ export async function insertSystemAssessment(
   return data;
 }
 
+/** Every flowsheet entry for a patient, newest first. Used by the printed patient record. */
+export async function fetchPatientSystemAssessments(
+  patientId: string,
+  tenantId: string,
+): Promise<SystemAssessmentRow[]> {
+  const { data, error } = await supabase
+    .from('patient_system_assessments')
+    .select('id, patient_id, tenant_id, system_type, assessment_data, nurse_id, nurse_name, is_baseline, recorded_at, created_at')
+    .eq('patient_id', patientId)
+    .eq('tenant_id', tenantId)
+    .order('recorded_at', { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 // ── Public hooks ──────────────────────────────────────────────────────────────
 
 /**

@@ -41,6 +41,22 @@ documented in this file.
   bug), the old notes, assessment and bowel tab components, VitalsContent and
   VitalSignsEditor, and the unused fetchTargetActivity audit helper. No route
   rendered any of it; patients open in the modular patient dashboard
+* The printed patient record now has a Flowsheet Assessments section: every
+  flowsheet form's entries, grouped by form, with student name, time and all
+  answers (instructor baselines are marked). Before this, no flowsheet form
+  printed. Older nursing assessment and bowel record sections now appear only
+  when the patient has earlier entries
+* Fixed: BPMH medication lists showed as "[object Object]" in the debrief, and
+  field names ran together (e.g. "ADMITTINGDIAGNOSIS"). Debrief entries now
+  use the form's title and readable field names
+* Fixed: a flowsheet entry made in a patient template before 2026-10-13 was
+  saved as student work, and was copied into two simulation templates.
+  Launched, it would have shown in the debrief under the instructor's name and
+  been deleted by the first reset. The rows and snapshots are corrected, and a
+  database trigger now makes every entry saved in a template a baseline
+  (migration `20261116013352_force_template_flowsheet_baseline.sql`)
+* `registry.test.ts` now fails if any flowsheet form saves under a different
+  type than its card, or doesn't save the student name or baseline flag
 ===============================================================================
 [Unreleased] - 2026-11-12 - ECHO: VITALS, I&O AND ORDERS AT THE BEDSIDE
 

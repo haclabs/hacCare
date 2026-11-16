@@ -143,14 +143,17 @@ In `registry.ts`, change the entry's status:
 
 The card immediately becomes clickable and routes to the form. **No other files need to change for the hub routing to work.**
 
-### Step 4 — Database + debrief wiring (required per project guide)
+### Step 4 — Save the student name and baseline flag (no database wiring)
 
-Follow the 4-part checklist in `.github/copilot-instructions.md` under "CRITICAL: Adding a New Clinical Table":
+Every form writes to the shared `patient_system_assessments` table, which is already wired into
+both reset functions, `simulation_table_config`, the debrief and the printed patient record. A
+new form needs no migration, but its save payload must include:
 
-1. **Reset functions** — add `DELETE FROM patient_system_assessments WHERE tenant_id = v_tenant_id AND system_type = 'pain'` to both reset functions via a new migration
-2. **`simulation_table_config`** — add a row so template snapshots capture the data
-3. **`studentActivityService.ts`** — add query + processing block for debrief aggregation
-4. **`EnhancedDebriefModal.tsx`** — add render section for the debrief report
+- `system_type: SYSTEM_TYPE`, equal to the card's `systemType` in `registry.ts`
+- `nurse_name: studentName.trim()` from a required student-name field (the debrief drops rows without one)
+- `is_baseline: isBaseline` (the hub passes `true` in template tenants)
+
+`registry.test.ts` fails if a form misses any of these.
 
 ---
 
@@ -162,11 +165,22 @@ The hub works in template editing mode without any special handling. When an ins
 
 Module shortcuts (vitals, HacMap, etc.) are unaffected — they delegate to existing modules that already handle template tenant context.
 
-### Snapshot & Restore
+### Snapshot, Reset, Debrief and Print
 
-Native forms write to `patient_system_assessments` (and any form-specific tables). These tables must be registered in `simulation_table_config` for `save_template_snapshot_v2` to include them in the template baseline.
-
-When `restore_snapshot_to_tenant_v2` runs on session reset, it wipes and restores these tables as part of the standard snapshot restore — no flowsheet-specific code needed, as long as the table is registered.
+- **Baseline vs student work:** entries saved in a template tenant are instructor baselines
+  (`is_baseline = true`). A database trigger enforces this for every template tenant, whatever
+  code path writes the row. Entries saved in a running simulation are student work.
+- **Launch:** `patient_system_assessments` is registered in `simulation_table_config`, so template
+  baselines are copied into the new simulation.
+- **Reset:** both `reset_simulation_for_next_session` and `reset_simulation_with_template_updates`
+  delete student entries (`is_baseline = false`) and keep the simulation's baselines in place. They
+  leave this table out of the snapshot restore so baselines aren't duplicated. As a result, a
+  "reset with template updates" does **not** pick up flowsheet baselines added or edited in the
+  template after launch.
+- **Debrief:** `studentActivityService.ts` reads every non-baseline entry with a `nurse_name`,
+  whatever the form; `DebriefActivityItem.tsx` shows each one under the form's title.
+- **Print:** the printed patient record has a "Flowsheet Assessments" section listing every entry,
+  grouped by form. The debrief and print share the formatting in `assessmentFormat.ts`.
 
 ### `lastRecorded` Timestamps (Not Yet Implemented)
 

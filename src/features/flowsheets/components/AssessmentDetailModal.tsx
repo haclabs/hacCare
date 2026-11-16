@@ -12,6 +12,7 @@
 
 import React from 'react';
 import { Clock, User, X } from 'lucide-react';
+import { humanizeKey, isEmptyValue } from '../assessmentFormat';
 
 interface AssessmentDetailModalProps {
   title: string;
@@ -23,17 +24,6 @@ interface AssessmentDetailModalProps {
 
 // Local-only keys that should never surface even if they leak into older rows.
 const SKIP_KEYS = new Set(['id']);
-
-function humanizeKey(key: string): string {
-  return key.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/^./, c => c.toUpperCase());
-}
-
-function isEmptyValue(value: unknown): boolean {
-  if (value === null || value === undefined) return true;
-  if (typeof value === 'string') return value.trim() === '';
-  if (Array.isArray(value)) return value.length === 0;
-  return false;
-}
 
 function renderPrimitive(value: unknown): string {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
