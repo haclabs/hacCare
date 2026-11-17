@@ -15,12 +15,16 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router';
 import { LandingPage } from './components/LandingPage/LandingPage';
 import { PrivacyPage } from './components/Auth/PrivacyPage';
+import { MarketingPageView } from './components/Marketing/MarketingPageView';
+import { MARKETING_PAGES } from './components/Marketing/pages';
 
 export { LANDING_FAQ } from './components/LandingPage/faqData';
+export { MARKETING_PAGES };
 
 const PAGES: Record<string, () => ReactElement> = {
   '/': () => <LandingPage />,
   '/privacy': () => <PrivacyPage />,
+  ...Object.fromEntries(MARKETING_PAGES.map(page => [page.path, () => <MarketingPageView page={page} />])),
 };
 
 export function render(url: string): string {

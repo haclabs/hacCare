@@ -7,6 +7,20 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-16 - PUBLIC MARKETING PAGES
+
+* Six new public pages aimed at Canadian nursing schools: /bcma-training,
+  /simulation-labs, /educators, /canadian-nursing-schools, /security and
+  /about. Each is prerendered with its own title, description and canonical
+  and listed in the sitemap
+* Pages are content data in src/components/Marketing/pages rendered by one
+  MarketingPageView; adding a page there wires routing, prerender, sitemap
+  and footer. The build fails if its netlify.toml rewrite is missing
+* Landing page footer replaced by the shared MarketingFooter, which links
+  every page
+* Site language set to en-CA (html lang and hreflang)
+
+===============================================================================
 [Unreleased] - 2026-11-16 - PUBLIC SITE SEO FIXES
 
 * robots.txt rewritten: the per-bot "Allow: /" groups meant Google, Bing and

@@ -13,6 +13,8 @@ import { LoginForm } from './components/Auth/LoginForm';
 import { PrivacyPage } from './components/Auth/PrivacyPage';
 import { SetNewPassword } from './components/Auth/SetNewPassword';
 import { LandingPage } from './components/LandingPage/LandingPage';
+import { MarketingPageView } from './components/Marketing/MarketingPageView';
+import { MARKETING_PAGES } from './components/Marketing/pages';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { queryClient } from './lib/api/queryClient';
 import { initializeBarcodeScanner } from './lib/barcode/barcodeScanner';
@@ -70,6 +72,9 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/set-password" element={<SetNewPassword />} />
+                {MARKETING_PAGES.map(page => (
+                  <Route key={page.path} path={page.path} element={<MarketingPageView page={page} />} />
+                ))}
                 
                 {/* Bedside tablet (Echo) */}
                 <Route path={`${ECHO_PATH}/*`} element={<EchoRoute />} />
