@@ -111,6 +111,10 @@
 .gallery__frame--tall { aspect-ratio: 3 / 4; }
 .gallery__frame--wide { aspect-ratio: 5 / 4; }
 .gallery figcaption { margin-top: 10px; }
+.gallery__stats { display: flex; flex-wrap: wrap; gap: 24px 56px; margin-top: 48px; }
+.gallery__stats div { display: flex; flex-direction: column-reverse; }
+.gallery__stats dd { margin: 0; font-size: var(--step-head); font-weight: 800; line-height: 0.95; letter-spacing: -0.04em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.gallery__stats dt { margin-top: 8px; font-weight: 600; }
 @media (max-width: 899px) {
   .gallery__grid { display: flex; flex-direction: column; gap: 56px; }
   .gallery__a { width: 70%; }

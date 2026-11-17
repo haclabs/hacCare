@@ -26,6 +26,16 @@ export const LabGallery: React.FC = () => (
         <p className="site-lead">
           Students at Lethbridge Polytechnic use hacCare on real equipment: printed wristbands, barcode scanners and an instructor running the scenario.
         </p>
+        <dl className="gallery__stats">
+          <div>
+            <dt>Active programs</dt>
+            <dd>5</dd>
+          </div>
+          <div>
+            <dt>Simulations run</dt>
+            <dd>1,000+</dd>
+          </div>
+        </dl>
       </div>
 
       <figure className="gallery__b">

@@ -26,6 +26,7 @@ documented in this file.
   Schibsted Grotesk; Archivo kept for the wordmark
 * Entrance motion respects prefers-reduced-motion and only hides content
   once scripts run, so prerendered HTML always shows everything
+* Programs and simulations-run figures moved into the lab section
 * Removed unused LandingPage/logo.png and logo.webp
 
 ===============================================================================
