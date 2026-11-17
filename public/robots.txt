@@ -1,53 +1,22 @@
-# robots.txt for hacCare
+# robots.txt for hacCare — https://haccare.app
+#
+# One group for every crawler. A bot obeys only the most specific group that
+# names it, so adding a "User-agent: Googlebot" group here would make Google
+# ignore every Disallow below. Add per-bot groups only to block a bot outright.
+#
+# /login is left crawlable on purpose: it carries a noindex tag, which
+# Google can only see if it is allowed to fetch the page.
+#
+# AI search crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, …) are
+# deliberately allowed so hacCare can appear in AI-generated answers.
+
 User-agent: *
-Allow: /
-Disallow: /admin
-Disallow: /api/
-Disallow: /dashboard
-Disallow: /patients
-Disallow: /clinical
-Disallow: /simulation
+Disallow: /app/
+Disallow: /echo/
+Disallow: /auth/
+Disallow: /set-password
 
-# Sitemap location
-Sitemap: https://haccare.app/sitemap.xml
-
-# Crawl delay (optional, adjust as needed)
-Crawl-delay: 1
-
-# Allow common search engine bots
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Slurp
-Allow: /
-
-# Allow AI search engine crawlers so hacCare appears in AI-generated answers
-# (Perplexity, ChatGPT, Google AI Overviews, Claude, Common Crawl)
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: CCBot
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-# Block bad bots
+# SEO tool crawlers — no benefit to the site, only load
 User-agent: AhrefsBot
 Disallow: /
 
@@ -56,3 +25,5 @@ Disallow: /
 
 User-agent: MJ12bot
 Disallow: /
+
+Sitemap: https://haccare.app/sitemap.xml

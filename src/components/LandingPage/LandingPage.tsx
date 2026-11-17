@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { LandingFaq } from './LandingFaq';
 import {
   Shield,
   Scan,
@@ -45,7 +46,6 @@ function FeatureTag({ text }: { text: string }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const LandingPage: React.FC = () => {
-  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -61,7 +61,7 @@ export const LandingPage: React.FC = () => {
   const [heroVideoPlaying, setHeroVideoPlaying] = useState(false);
 
   useEffect(() => {
-    document.title = 'hacCare — Simulated EMR & Training Platform for Healthcare Education';
+    document.title = 'hacCare | Simulated EMR for Nursing & Healthcare Education';
     
     // Software Application Schema
     return () => {};
@@ -106,15 +106,15 @@ export const LandingPage: React.FC = () => {
             <HacCareLogo variant="dark" size="30px" withBar />
             <div className="hidden md:flex items-center gap-8">
               {(['features', 'simulation', 'security', 'contact'] as const).map(s => (
-                <button key={s} onClick={() => scrollToSection(s)}
+                <a key={s} href={`#${s}`} onClick={e => { e.preventDefault(); scrollToSection(s); }}
                   className="text-slate-400 hover:text-white capitalize text-sm font-medium transition-colors">
                   {s}
-                </button>
+                </a>
               ))}
-              <button onClick={() => navigate('/login')}
+              <Link to="/login"
                 className="text-slate-300 hover:text-white text-sm font-medium transition-colors">
                 Login
-              </button>
+              </Link>
               <button onClick={() => scrollToSection('contact')}
                 className={`${primaryBtn}`}
                 style={{ backgroundColor: '#3fbf9a' }}>
@@ -130,15 +130,15 @@ export const LandingPage: React.FC = () => {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-800 bg-slate-900 px-4 py-4 space-y-3">
             {['features', 'simulation', 'security', 'contact'].map(s => (
-              <button key={s} onClick={() => scrollToSection(s)}
+              <a key={s} href={`#${s}`} onClick={e => { e.preventDefault(); scrollToSection(s); }}
                 className="block w-full text-left text-slate-300 hover:text-white py-2 capitalize text-sm">
                 {s}
-              </button>
+              </a>
             ))}
-            <button onClick={() => navigate('/login')}
+            <Link to="/login"
               className="block w-full text-left text-slate-300 hover:text-white py-2 text-sm">
               Login
-            </button>
+            </Link>
             <button onClick={() => scrollToSection('contact')}
               className={`${primaryBtn} w-full justify-center`} style={{ backgroundColor: '#3fbf9a' }}>
               Request Access
@@ -761,6 +761,8 @@ export const LandingPage: React.FC = () => {
           </div>
         </section>
 
+        <LandingFaq />
+
         {/* ── CONTACT ────────────────────────────────────────────────────────── */}
         <section id="contact" className="py-24 px-4 bg-slate-900/40">
           <div className="max-w-7xl mx-auto">
@@ -861,13 +863,14 @@ export const LandingPage: React.FC = () => {
                   ['Features', 'features'],
                   ['Simulation', 'simulation'],
                   ['Security', 'security'],
+                  ['FAQ', 'faq'],
                   ['Contact', 'contact'],
                 ].map(([label, id]) => (
                   <li key={label}>
-                    <button onClick={() => scrollToSection(id)}
+                    <a href={`#${id}`} onClick={e => { e.preventDefault(); scrollToSection(id); }}
                       className="text-slate-400 hover:text-white text-sm transition-colors">
                       {label}
-                    </button>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -876,10 +879,16 @@ export const LandingPage: React.FC = () => {
               <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Account</div>
               <ul className="space-y-2.5">
                 <li>
-                  <button onClick={() => navigate('/login')}
+                  <Link to="/login"
                     className="text-slate-400 hover:text-white text-sm transition-colors">
                     Login
-                  </button>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy"
+                    className="text-slate-400 hover:text-white text-sm transition-colors">
+                    Privacy
+                  </Link>
                 </li>
                 <li>
                   <button onClick={() => scrollToSection('contact')}

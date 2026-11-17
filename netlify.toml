@@ -36,8 +36,78 @@
   status = 200
   force = false
 
-# Main SPA fallback - must come after specific redirects
+# ============================================================================
+# MAIN SITE ROUTING
+# ============================================================================
+# There is deliberately NO catch-all "/* -> /index.html" rule. Every client
+# route is listed below; anything else gets dist/404.html with a real 404
+# status, so crawlers don't index typo URLs as copies of the home page.
+#
+# Adding a new top-level client route in src/main.tsx? Add it here too, or it
+# will 404 on a hard refresh.
+#
+# Public pages are prerendered to their own files by scripts/prerender.mjs.
+
 [[redirects]]
-  from = "/*"
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+
+[[redirects]]
+  from = "/set-password"
+  to = "/set-password.html"
+  status = 200
+
+# Authenticated app, Echo tablet view, OAuth callback
+[[redirects]]
+  from = "/app/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/echo/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/echo"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/auth/*"
+  to = "/index.html"
+  status = 200
+
+# Legacy top-level paths still referenced in the app (Sidebar, SimulationPortal,
+# routerIntegratedTenantService). Kept so this change doesn't alter their
+# behaviour; they should move under /app/.
+[[redirects]]
+  from = "/simulation-portal/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/simulation-portal"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/management/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/management"
   to = "/index.html"
   status = 200

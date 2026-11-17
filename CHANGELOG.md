@@ -7,6 +7,29 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-16 - PUBLIC SITE SEO FIXES
+
+* robots.txt rewritten: the per-bot "Allow: /" groups meant Google, Bing and
+  the AI crawlers ignored every Disallow, and the disallowed paths didn't
+  match real routes. Now one group blocking /app/, /echo/, /auth/ and
+  /set-password; AI search crawlers stay allowed
+* Each public page is prerendered to its own file with its own title,
+  description and canonical: /privacy is now indexable, /login and
+  /set-password are noindex
+* Unknown URLs now return a real 404 page instead of a copy of the home page.
+  The Netlify catch-all rewrite is replaced by an explicit list of client
+  routes (netlify.toml) — add new top-level routes there
+* sitemap.xml is generated at build time (/ and /privacy, current lastmod);
+  /login removed. Duplicate public/_redirects removed (netlify.toml is the
+  single source)
+* Landing page: section, login and new privacy links are real <a> links so
+  crawlers can follow them; visible FAQ section added, and the FAQPage
+  schema is generated from the same data (Google requires them to match).
+  Privacy FAQ no longer claims flat HIPAA compliance, matching the page copy
+* Shorter title and meta description; author tag typo fixed; keywords meta
+  removed; missing </head> added to index.html
+
+===============================================================================
 [Unreleased] - 2026-11-16 - CHARTING INTEGRITY FOLLOW-UPS
 
 * Security: flowsheet entries can no longer be deleted by signed-in users;
