@@ -63,6 +63,38 @@
   to = "/set-password.html"
   status = 200
 
+# Marketing pages (src/components/Marketing/pages). scripts/prerender.mjs
+# fails the build if a page is missing here.
+[[redirects]]
+  from = "/bcma-training"
+  to = "/bcma-training.html"
+  status = 200
+
+[[redirects]]
+  from = "/simulation-labs"
+  to = "/simulation-labs.html"
+  status = 200
+
+[[redirects]]
+  from = "/educators"
+  to = "/educators.html"
+  status = 200
+
+[[redirects]]
+  from = "/canadian-nursing-schools"
+  to = "/canadian-nursing-schools.html"
+  status = 200
+
+[[redirects]]
+  from = "/security"
+  to = "/security.html"
+  status = 200
+
+[[redirects]]
+  from = "/about"
+  to = "/about.html"
+  status = 200
+
 # Authenticated app, Echo tablet view, OAuth callback
 [[redirects]]
   from = "/app/*"

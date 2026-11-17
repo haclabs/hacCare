@@ -35,7 +35,7 @@ const SITE = 'https://haccare.app';
  * otherwise the root stays empty and the client renders it.
  * `inSitemap` routes must also be `index`able.
  */
-const ROUTES = [
+const STATIC_ROUTES = [
   {
     path: '/',
     file: 'index.html',
@@ -101,7 +101,7 @@ function applyHead(html, route) {
   out = replaceOnce(out, /<link rel="canonical" href="[^"]*" \/>/, `<link rel="canonical" href="${url}" />`, 'canonical');
   out = replaceOnce(out, /<meta property="og:url" content="[^"]*" \/>/, `<meta property="og:url" content="${url}" />`, 'og:url');
   out = replaceOnce(out, /<meta property="twitter:url" content="[^"]*" \/>/, `<meta property="twitter:url" content="${url}" />`, 'twitter:url');
-  out = out.replace(/(<link rel="alternate" hreflang="(?:en|x-default)" href=")[^"]*(" \/>)/g, `$1${url}$2`);
+  out = out.replace(/(<link rel="alternate" hreflang="(?:en-CA|x-default)" href=")[^"]*(" \/>)/g, `$1${url}$2`);
 
   if (route.noindex) {
     out = replaceOnce(out, /<meta name="robots" content="[^"]*" \/>/, '<meta name="robots" content="noindex, follow" />', 'robots');
@@ -211,7 +211,29 @@ await build({
 });
 
 const entryUrl = pathToFileURL(resolve(ssrOutDir, 'entry-server.js')).href;
-const { render, LANDING_FAQ } = await import(/* @vite-ignore */ entryUrl);
+const { render, LANDING_FAQ, MARKETING_PAGES } = await import(/* @vite-ignore */ entryUrl);
+
+// Marketing pages (src/components/Marketing/pages) are prerendered and listed
+// in the sitemap with their own title and description.
+const ROUTES = [
+  ...STATIC_ROUTES,
+  ...MARKETING_PAGES.map((page) => ({
+    path: page.path,
+    file: `${page.path.slice(1)}.html`,
+    render: true,
+    inSitemap: true,
+    title: page.title,
+    description: page.description,
+  })),
+];
+
+// Every route except / needs a rewrite in netlify.toml, or Netlify returns the
+// 404 page for it. Fail the build rather than ship an unreachable page.
+const netlifyToml = readFileSync(resolve(root, 'netlify.toml'), 'utf-8');
+const missing = ROUTES.filter((r) => r.path !== '/' && !netlifyToml.includes(`from = "${r.path}"`));
+if (missing.length) {
+  throw new Error(`prerender: add a netlify.toml rewrite for ${missing.map((r) => r.path).join(', ')}`);
+}
 
 // ── 2. Per-route HTML ────────────────────────────────────────────────────────
 const template = readFileSync(resolve(distDir, 'index.html'), 'utf-8');

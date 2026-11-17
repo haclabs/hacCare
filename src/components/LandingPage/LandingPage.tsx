@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LandingFaq } from './LandingFaq';
+import { MarketingFooter } from '../Marketing/MarketingFooter';
 import {
   Shield,
   Scan,
@@ -844,67 +845,7 @@ export const LandingPage: React.FC = () => {
 
       </main>
 
-      {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-800 bg-slate-950 py-14 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-10 mb-12">
-            <div className="md:col-span-2">
-              <div className="mb-4">
-                <HacCareLogo variant="dark" size="26px" withBar />
-              </div>
-              <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-                A high-fidelity simulated EMR platform for healthcare education. Built in Lethbridge, Alberta. A haclabs product.
-              </p>
-            </div>
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Platform</div>
-              <ul className="space-y-2.5">
-                {[
-                  ['Features', 'features'],
-                  ['Simulation', 'simulation'],
-                  ['Security', 'security'],
-                  ['FAQ', 'faq'],
-                  ['Contact', 'contact'],
-                ].map(([label, id]) => (
-                  <li key={label}>
-                    <a href={`#${id}`} onClick={e => { e.preventDefault(); scrollToSection(id); }}
-                      className="text-slate-400 hover:text-white text-sm transition-colors">
-                      {label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4">Account</div>
-              <ul className="space-y-2.5">
-                <li>
-                  <Link to="/login"
-                    className="text-slate-400 hover:text-white text-sm transition-colors">
-                    Login
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/privacy"
-                    className="text-slate-400 hover:text-white text-sm transition-colors">
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <button onClick={() => scrollToSection('contact')}
-                    className="text-slate-400 hover:text-white text-sm transition-colors">
-                    Request Access
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <p className="text-slate-500 text-sm">&copy; 2026 hacCare. A haclabs product. All rights reserved.</p>
-            <p className="text-slate-600 text-xs">Lethbridge, Alberta, Canada</p>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 };
