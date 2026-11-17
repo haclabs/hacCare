@@ -1,0 +1,60 @@
+/* Marketing pages (/bcma-training, /security, …). Tokens in site.css. */
+
+.mpage__hero { display: grid; gap: var(--margin); padding-top: clamp(40px, 5vw, 80px); align-items: center; }
+.mpage__hero.has-image { grid-template-columns: 7fr 5fr; }
+.mpage__title { max-width: 13em; }
+.mpage__lead { max-width: 36ch; margin-top: 28px; }
+.mpage__cta { margin-top: 36px; }
+.mpage__frame { overflow: hidden; border-radius: var(--band); aspect-ratio: 3 / 4; background: var(--surface); }
+.mpage__frame img { width: 100%; height: 100%; object-fit: cover; }
+.mpage__figure figcaption { margin-top: 10px; }
+
+/* Highlights: a list in large type, each led by a small wristband bullet. */
+.mpage__highlights ul { display: grid; gap: 48px var(--margin); }
+@media (min-width: 900px) { .mpage__highlights ul { grid-template-columns: repeat(3, 1fr); } }
+.mpage__highlights h2 { font-size: var(--step-statement); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 12px; }
+.mpage__highlights h2::before { content: ''; display: block; width: 44px; height: 16px; margin-bottom: 20px; border-radius: var(--band); background: var(--accent); }
+.mpage__highlights p { max-width: 36ch; }
+
+/* Sections: heading on the left axis, text hanging from the right. */
+.mpage__body { display: grid; gap: clamp(56px, 7vw, 96px); }
+.mpage__body section { display: grid; gap: 16px var(--margin); }
+@media (min-width: 900px) { .mpage__body section { grid-template-columns: 5fr 7fr; } }
+.mpage__body h2 { font-size: var(--step-statement); font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; max-width: 14em; }
+.mpage__body p { max-width: 60ch; margin-bottom: 16px; }
+.mpage__bullets { display: grid; gap: 12px; margin-top: 8px; max-width: 60ch; }
+.mpage__bullets li { position: relative; padding-left: 40px; }
+.mpage__bullets li::before { content: ''; position: absolute; left: 0; top: 0.5em; width: 24px; height: 9px; border-radius: var(--band); background: var(--mint); }
+
+/* Closing field in brand teal. */
+.mpage__close { background: var(--accent); color: #fff; padding-block: clamp(72px, 9vw, 128px); }
+.mpage__close-inner { display: grid; gap: 32px; align-items: end; }
+@media (min-width: 900px) { .mpage__close-inner { grid-template-columns: 1fr auto; } }
+.mpage__close .site-head { max-width: 14em; }
+.mpage__close .site-lead { max-width: 40ch; margin-top: 20px; }
+.mpage__close :focus-visible { outline-color: #fff; }
+
+.mpage__related-head { font-weight: 700; margin-bottom: 20px; font-size: var(--step-lead); }
+.mpage__related ul { display: grid; gap: var(--margin); }
+@media (min-width: 900px) { .mpage__related ul { grid-template-columns: repeat(3, 1fr); } }
+.mpage__tile { display: grid; gap: 14px; text-decoration: none; }
+.mpage__tile-pic { display: block; aspect-ratio: 16 / 10; overflow: hidden; background: var(--mint-pale); }
+.mpage__tile-pic img { width: 100%; height: 100%; object-fit: cover; object-position: left top; transition: transform 400ms var(--ease-out); }
+.mpage__tile-label { font-size: var(--step-lead); font-weight: 700; letter-spacing: -0.02em; }
+@media (hover: hover) and (pointer: fine) {
+  .mpage__tile:hover .mpage__tile-pic img { transform: scale(1.04); }
+  .mpage__tile:hover .mpage__tile-label { text-decoration: underline; text-underline-offset: 0.2em; }
+}
+
+/* Screenshot on a teal band with a round wristband end. */
+.mpage__shot-stage {
+  margin-left: clamp(16px, 8vw, 160px); padding: clamp(32px, 5vw, 72px) var(--margin) clamp(32px, 5vw, 72px) clamp(48px, 8vw, 140px);
+  background: var(--accent); border-radius: var(--band) 0 0 var(--band);
+}
+.mpage__shot-stage img { width: min(100%, 980px); height: auto; }
+.mpage__shot figcaption { margin-top: 12px; text-align: right; }
+
+@media (max-width: 899px) {
+  .mpage__hero.has-image { grid-template-columns: 1fr; }
+  .mpage__figure { width: 78%; justify-self: end; }
+}

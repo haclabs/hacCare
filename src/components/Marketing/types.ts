@@ -41,12 +41,13 @@ export interface MarketingPageContent {
   title: string;
   /** Meta description; aim for 155 characters or fewer. */
   description: string;
-  eyebrow: string;
   h1: string;
   lead: string;
   highlights: MarketingHighlight[];
-  /** Optional photo or screenshot shown after the highlights. */
+  /** Photograph shown beside the headline, in the wristband frame. */
   image?: MarketingImage;
+  /** Product screenshot shown on a teal band; also the page's tile in related links. */
+  screenshot?: MarketingImage;
   sections: MarketingSection[];
   ctaHeading: string;
   ctaBody: string;

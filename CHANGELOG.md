@@ -7,6 +7,28 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-16 - PUBLIC SITE REDESIGN
+
+* Home page and marketing pages redesigned around one motif, the patient
+  wristband: a giant teal band carries the hero, photos sit in band-shaped
+  frames, buttons are band-shaped and the footer spells the name in blocks
+* Hero has a working medication pass: scan the wristband, pick a label, and
+  the wrong dose is caught while the right one ticks off the five rights
+  (fictional patient, no backend)
+* New sections: module showcase with real screenshots, lab photographs,
+  how a simulation runs (one card through four stages), Canadian data and
+  licence panel, tabbed FAQ cards, coupon-style demo form
+* Fixes from the audit: white-on-mint buttons (2.3:1) replaced with teal,
+  body text 17-19px (was 14px), five type sizes instead of eleven, no
+  gradients, glows, icon card rows or headlines past two lines
+* Styles live in src/components/Marketing/site.css (tokens, nav, footer,
+  motion), LandingPage/landing.css and Marketing/marketing.css. Typeface:
+  Schibsted Grotesk; Archivo kept for the wordmark
+* Entrance motion respects prefers-reduced-motion and only hides content
+  once scripts run, so prerendered HTML always shows everything
+* Removed unused LandingPage/logo.png and logo.webp
+
+===============================================================================
 [Unreleased] - 2026-11-16 - PUBLIC MARKETING PAGES
 
 * Six new public pages aimed at Canadian nursing schools: /bcma-training,

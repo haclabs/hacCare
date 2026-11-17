@@ -1,0 +1,172 @@
+/*
+ * hacCare public site — design system for the landing page and the
+ * marketing pages. Plain CSS scoped under .site; the authenticated app does
+ * not use it.
+ *
+ * Motif: the patient wristband. Its stadium shape (a band with fully round
+ * ends) is the photo mask, the button shape and the hero stage. Everything
+ * else is ground and ink. Brand teal/mint from src/index.css.
+ */
+
+.site {
+  --ground: #f3f6f5;
+  --surface: #e4ecea;
+  --ink: #0c1d1a;
+  --muted: #3f5852;
+  --accent: #14776a;
+  --accent-strong: #0f5c52;
+  --mint: #3fbf9a;
+  --mint-pale: #cfe9e1;
+  --deep: #0b2f2a;
+  --deep-ink: #e9f4f1;
+  --deep-muted: #b5d0c9;
+  --alert: #b3261e;
+
+  --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+  --step-display: clamp(2.75rem, 1.2rem + 5.2vw, 5.25rem);
+  --step-sub: clamp(1.75rem, 1rem + 2.1vw, 2.75rem);
+  --step-statement: clamp(1.5rem, 1rem + 1.4vw, 2.25rem);
+
+  --margin: clamp(16px, 2.8vw, 40px);
+  --gap-section: clamp(96px, 12vw, 200px);
+  --band: 9999px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  min-height: 100svh;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--step-body);
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.site *,
+.site *::before,
+.site *::after { box-sizing: border-box; }
+
+:where(.site) :where(h1, h2, h3, p, ul, ol, dl, figure, blockquote) { margin: 0; }
+:where(.site) :where(ul, ol) { padding: 0; list-style: none; }
+:where(.site) img { display: block; max-width: 100%; }
+:where(.site) a { color: inherit; }
+
+.site :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.site ::selection { background: var(--mint); color: var(--ink); }
+
+html:has(.site) { scroll-padding-top: 88px; }
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.site) { scroll-behavior: smooth; }
+}
+
+.site-wrap { padding-inline: var(--margin); max-width: 1520px; margin-inline: auto; }
+.site-section { padding-block: var(--gap-section) 0; }
+
+.site-display {
+  font-size: var(--step-display);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+.site-head {
+  font-size: var(--step-head);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+.site-lead { font-size: var(--step-lead); line-height: 1.3; letter-spacing: -0.02em; }
+.site-small { font-size: var(--step-small); color: var(--muted); }
+.site-measure { max-width: 60ch; }
+
+.site-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; /* taste-skill-ignore: visually hidden */
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── Buttons: wristband-shaped, one fill ─────────────────────────────────── */
+.site-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
+  min-height: 48px; padding: 0 1.5em;
+  border: 0; border-radius: var(--band);
+  background: var(--accent); color: #fff;
+  font: 600 var(--step-body)/1 inherit; letter-spacing: -0.01em;
+  text-decoration: none; cursor: pointer;
+  transition: transform 120ms var(--ease-out), background-color 160ms ease;
+}
+.site-btn:active { transform: scale(0.97); }
+.site-btn--mint { background: var(--mint); color: var(--ink); }
+.site-btn--small { min-height: 40px; font-size: var(--step-small); padding: 0 1.1em; }
+@media (hover: hover) and (pointer: fine) {
+  .site-btn:hover { background: var(--accent-strong); }
+  .site-btn--mint:hover { background: var(--mint-pale); }
+}
+
+.site-link {
+  font-weight: 600; text-decoration: underline;
+  text-decoration-color: transparent; text-underline-offset: 0.2em; text-decoration-thickness: 0.08em;
+  transition: text-decoration-color 160ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .site-link:hover { text-decoration-color: currentColor; }
+}
+
+/* ── Navigation ──────────────────────────────────────────────────────────── */
+.site-nav {
+  position: sticky; top: 0; z-index: 40;
+  background: var(--ground);
+}
+.site-nav__row { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 76px; }
+.site-nav__links { display: flex; align-items: center; gap: clamp(16px, 2.2vw, 32px); font-size: var(--step-small); font-weight: 600; }
+.site-nav__links a:not(.site-btn) { text-decoration: none; color: var(--muted); transition: color 160ms ease; }
+.site-nav__links a:not(.site-btn)[aria-current='page'], .site-nav__links a:not(.site-btn):hover { color: var(--ink); }
+.site-nav__hide-sm { display: none; }
+@media (min-width: 900px) { .site-nav__hide-sm { display: inline; } }
+
+/* ── Entrances (only once JS is running, so prerendered content is visible) */
+@media (prefers-reduced-motion: no-preference) {
+  .site.js [data-reveal] {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 80ms);
+  }
+  .site.js [data-reveal].is-in { opacity: 1; transform: none; }
+
+  .site.js .site-shutter { clip-path: inset(0 0 100% 0); transition: clip-path 1100ms var(--ease-in-out); }
+  .site.js .site-shutter > * { transform: scale(1.12); transition: transform 1500ms var(--ease-out); }
+  .site.js .site-shutter.is-in { clip-path: inset(0); }
+  .site.js .site-shutter.is-in > * { transform: none; }
+
+  .site.js .site-wipe { clip-path: inset(100% 0 0 0); transition: clip-path 900ms var(--ease-in-out); }
+  .site.js .site-wipe.is-in { clip-path: inset(0); }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-drift { animation: site-drift linear both; animation-timeline: view(); animation-range: entry 0% exit 100%; }
+    @keyframes site-drift { from { transform: translateY(-4%) scale(1.06); } to { transform: translateY(4%) scale(1.06); } }
+  }
+}
+
+/* ── Footer: the name built large ────────────────────────────────────────── */
+.footer { background: var(--deep); color: var(--deep-ink); padding: 96px 0 40px; margin-top: var(--gap-section); }
+.footer a { text-decoration: none; transition: color 160ms ease; }
+.footer a:not(.site-btn):hover { color: var(--mint); }
+.footer__mark { display: flex; align-items: flex-end; gap: 4px; height: 34svh; min-height: 180px; }
+.footer__mark span {
+  flex: 1; display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+  border-radius: var(--band) var(--band) 0 0; padding-bottom: 0.06em;
+  font-weight: 800; font-size: clamp(48px, 10vw, 180px); line-height: 0.8; letter-spacing: -0.05em;
+}
+.footer__cols { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px var(--margin); margin-top: 56px; font-size: var(--step-small); }
+@media (min-width: 900px) { .footer__cols { grid-template-columns: repeat(4, 1fr); } }
+.footer__cols ul { display: grid; gap: 10px; }
+.footer__cols p { line-height: 1.5; }
+.footer__head { font-weight: 700; margin-bottom: 12px; }
+.footer__contact { display: grid; gap: 10px; align-content: start; }
+.footer__last { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 72px; font-size: var(--step-small); color: var(--deep-muted); flex-wrap: wrap; }
+@media (max-width: 899px) { .footer__mark { height: 22svh; min-height: 120px; } }

@@ -1,62 +1,67 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { HacCareLogo } from '../Layout/HacCareLogo';
 import { MARKETING_PAGES } from './pages';
 
-const linkCls = 'text-slate-400 hover:text-white text-sm transition-colors';
-const headingCls = 'text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4';
+/** Letters of the block wordmark, each knocked out of its own band of colour. */
+const BLOCKS = [
+  { ch: 'h', h: 100, c: 'var(--accent)', ink: 'var(--ground)' },
+  { ch: 'a', h: 72, c: 'var(--accent)', ink: 'var(--ground)' },
+  { ch: 'c', h: 84, c: 'var(--accent)', ink: 'var(--ground)' },
+  { ch: 'C', h: 100, c: 'var(--mint)', ink: 'var(--deep)' },
+  { ch: 'a', h: 64, c: 'var(--mint)', ink: 'var(--deep)' },
+  { ch: 'r', h: 78, c: 'var(--mint)', ink: 'var(--deep)' },
+  { ch: 'e', h: 90, c: 'var(--mint)', ink: 'var(--deep)' },
+];
 
 /**
- * Site footer shared by the landing page and every marketing page.
- * Home-page sections use plain "/#id" anchors: on the home page the browser
- * just scrolls; elsewhere it navigates home and jumps to the section.
+ * Site footer shared by the landing page and every marketing page: the name
+ * built large from wristband-ended blocks, then plain link columns.
+ * Home-page sections use "/#id" anchors so they work from any page.
  */
 export const MarketingFooter: React.FC = () => (
-  <footer className="border-t border-slate-800 bg-slate-950 py-14 px-4">
-    <div className="max-w-7xl mx-auto">
-      <div className="grid sm:grid-cols-2 md:grid-cols-5 gap-10 mb-12">
-        <div className="sm:col-span-2">
-          <div className="mb-4">
-            <Link to="/" aria-label="hacCare home">
-              <HacCareLogo variant="dark" size="26px" withBar />
-            </Link>
-          </div>
-          <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-            A high-fidelity simulated EMR platform for healthcare education. Built in Lethbridge, Alberta. A haclabs product.
-          </p>
-        </div>
+  <footer className="footer">
+    <div className="site-wrap">
+      <Link to="/" className="footer__mark" aria-label="hacCare home">
+        {BLOCKS.map((b, i) => (
+          <span key={i} aria-hidden="true" style={{ height: `${b.h}%`, background: b.c, color: b.ink }}>{b.ch}</span>
+        ))}
+      </Link>
+
+      <div className="footer__cols">
         <nav aria-label="Platform">
-          <div className={headingCls}>Platform</div>
-          <ul className="space-y-2.5">
-            {[
-              ['Features', '/#features'],
-              ['Simulation', '/#simulation'],
-              ['FAQ', '/#faq'],
-              ['Request Access', '/#contact'],
-            ].map(([label, href]) => (
-              <li key={href}><a href={href} className={linkCls}>{label}</a></li>
-            ))}
+          <p className="footer__head">Platform</p>
+          <ul>
+            <li><a href="/#platform">Modules</a></li>
+            <li><a href="/#how-it-works">How it works</a></li>
+            <li><a href="/#faq">FAQ</a></li>
+            <li><a href="/#contact">Request a demo</a></li>
           </ul>
         </nav>
         <nav aria-label="Solutions">
-          <div className={headingCls}>Solutions</div>
-          <ul className="space-y-2.5">
-            {MARKETING_PAGES.map(page => (
-              <li key={page.path}><Link to={page.path} className={linkCls}>{page.navLabel}</Link></li>
+          <p className="footer__head">Solutions</p>
+          <ul>
+            {MARKETING_PAGES.map(p => (
+              <li key={p.path}><Link to={p.path}>{p.navLabel}</Link></li>
             ))}
           </ul>
         </nav>
         <nav aria-label="Account">
-          <div className={headingCls}>Account</div>
-          <ul className="space-y-2.5">
-            <li><Link to="/login" className={linkCls}>Login</Link></li>
-            <li><Link to="/privacy" className={linkCls}>Privacy</Link></li>
+          <p className="footer__head">Account</p>
+          <ul>
+            <li><Link to="/login">Login</Link></li>
+            <li><Link to="/privacy">Privacy notice</Link></li>
           </ul>
         </nav>
+        <div className="footer__contact">
+          <p className="footer__head">Contact</p>
+          <p><a href="mailto:support@haccare.app">support@haccare.app</a></p>
+          <p>haclabs Inc.<br />Lethbridge, Alberta, Canada</p>
+        </div>
       </div>
-      <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <p className="text-slate-500 text-sm">&copy; {new Date().getFullYear()} hacCare. A haclabs product. All rights reserved.</p>
-        <p className="text-slate-500 text-xs">Lethbridge, Alberta, Canada</p>
+
+      <div className="footer__last">
+        <p>&copy; {new Date().getFullYear()} haclabs Inc. hacCare is a haclabs product.</p>
+        <a href="/#contact" className="site-btn site-btn--small site-btn--mint">Request a demo</a>
       </div>
     </div>
   </footer>

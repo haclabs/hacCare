@@ -6,8 +6,7 @@ export const BCMA_TRAINING: MarketingPageContent = {
   title: 'BCMA Training for Nursing Students | hacCare',
   description:
     'Barcode medication administration practice for Canadian nursing students. Real wristband and medication scans, with every error caught safely.',
-  eyebrow: 'BCMA training',
-  h1: 'Barcode medication administration, practised before the first placement',
+  h1: 'Practise BCMA before placement',
   lead:
     'In hacCare, students scan a real patient wristband and a real medication label, and the system checks the order before anything is charted. Wrong patient, wrong dose, wrong time: they find out in the lab, not on the unit.',
   highlights: [
@@ -30,6 +29,13 @@ export const BCMA_TRAINING: MarketingPageContent = {
     width: 600,
     height: 450,
     caption: 'A BCMA dual scan in a hacCare simulation lab.',
+  },
+  screenshot: {
+    src: '/images/bcma.webp',
+    alt: 'hacCare BCMA screen confirming the five rights before a dose is given',
+    width: 1009,
+    height: 639,
+    caption: 'The BCMA screen: every right confirmed before the dose is given.',
   },
   sections: [
     {
@@ -79,8 +85,7 @@ export const SIMULATION_LABS: MarketingPageContent = {
   title: 'EMR for Nursing Simulation Labs | hacCare',
   description:
     'A simulated EMR for nursing simulation centres: live instructor control, bedside barcode scanning, quick resets between groups and per-student debriefs.',
-  eyebrow: 'For simulation labs',
-  h1: 'An EMR built for the simulation lab, not adapted to it',
+  h1: 'An EMR built for the sim lab',
   lead:
     'Manikins and task trainers make the bedside realistic. hacCare does the same for the chart: students document in a working EMR while instructors run the scenario from their own screen.',
   highlights: [
@@ -103,6 +108,13 @@ export const SIMULATION_LABS: MarketingPageContent = {
     width: 600,
     height: 450,
     caption: 'Bedside scanning during a simulation.',
+  },
+  screenshot: {
+    src: '/images/barcode_med_admin.jpg',
+    alt: 'hacCare medication administration record listing PRN and scheduled medications',
+    width: 672,
+    height: 310,
+    caption: 'The medication record students work from during a scenario.',
   },
   sections: [
     {
@@ -153,8 +165,7 @@ export const EDUCATORS: MarketingPageContent = {
   title: 'Simulated EMR for Nursing Faculty | hacCare',
   description:
     'Build patient scenarios once, run them every term and see exactly what each student documented. A simulated EMR designed around nursing faculty.',
-  eyebrow: 'For nursing faculty',
-  h1: 'Spend your prep time on the scenario, not the software',
+  h1: 'Scenarios you build once',
   lead:
     'hacCare gives nursing faculty a reusable library of patient scenarios, one-step launches and a clear record of what every student documented.',
   highlights: [
@@ -172,6 +183,13 @@ export const EDUCATORS: MarketingPageContent = {
     },
   ],
   image: {
+    src: '/images/nurse-scanning.webp',
+    alt: 'Student nurse scanning a medication barcode while an instructor watches the scenario',
+    width: 600,
+    height: 450,
+    caption: 'A scenario running in the simulation lab.',
+  },
+  screenshot: {
     src: '/images/debrief.webp',
     alt: 'hacCare debrief report showing each student’s documented activity',
     width: 488,
