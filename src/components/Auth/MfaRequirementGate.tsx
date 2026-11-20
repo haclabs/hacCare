@@ -2,42 +2,62 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/api/supabase';
 import { secureLogger } from '../../lib/security/secureLogger';
-import { getMfaRequirement, mfaEnrollmentCopy } from '../../lib/security/mfaPolicy';
+import { getMfaRequirement, mfaEnrollmentCopy, mfaGateStep } from '../../lib/security/mfaPolicy';
+import { MFAChallenge } from './MFAChallenge';
 import { MFAEnrollment } from './MFAEnrollment';
 import LoadingSpinner from '../UI/LoadingSpinner';
 
+type GateState = 'checking' | 'allow' | 'challenge' | 'enroll';
+
 /**
- * Blocks the app for users whose 2FA grace period is over and who still have no
- * verified factor. The login form handles this too, but Microsoft sign-in and
- * restored sessions reach /app without passing through it.
+ * Applies the 2FA rules on /app, not just on /login: a password session that never
+ * entered its code (e.g. by typing /app after the password step) gets the code
+ * screen, and a user whose grace period is over with no factor must enroll.
+ * Microsoft sign-in and restored sessions also reach /app this way.
  */
 export const MfaRequirementGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, profile, signOut } = useAuth();
   const requirement = getMfaRequirement(profile);
-  const sessionHasFactor = user?.factors?.some(f => f.status === 'verified') ?? false;
-  const mustCheck = requirement.status === 'required' && !sessionHasFactor;
-  const [factorCheck, setFactorCheck] = useState<'pending' | 'enrolled' | 'missing'>('pending');
+  // A result only counts for the user and requirement it was computed for.
+  const checkKey = `${user?.id}:${requirement.status}`;
+  const [result, setResult] = useState<{ key: string; state: GateState } | null>(null);
+  const state: GateState = result?.key === checkKey ? result.state : 'checking';
 
   useEffect(() => {
-    if (!mustCheck) return;
     let cancelled = false;
-    // The session's user can be stale (factor added on another device), so confirm with the server.
-    supabase.auth.mfa.listFactors()
-      .then(({ data, error }) => {
-        if (error) throw error;
-        const enrolled = data.all.some(f => f.status === 'verified');
-        if (!cancelled) setFactorCheck(enrolled ? 'enrolled' : 'missing');
-      })
-      .catch((err) => {
+
+    const check = async () => {
+      const { data: aal, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (error) throw error;
+
+      const step = mfaGateStep(aal, requirement);
+      if (step !== 'check-factors') return step;
+
+      // The session's user can be stale (factor added on another device), so confirm with the server.
+      try {
+        const { data, error: factorsError } = await supabase.auth.mfa.listFactors();
+        if (factorsError) throw factorsError;
+        return data.all.some(f => f.status === 'verified') ? 'challenge' : 'enroll';
+      } catch (err) {
         secureLogger.error('Could not list MFA factors, requiring enrollment:', err);
-        if (!cancelled) setFactorCheck('missing');
+        return 'enroll';
+      }
+    };
+
+    check()
+      .then((next) => { if (!cancelled) setResult({ key: checkKey, state: next }); })
+      .catch(async (err) => {
+        // Fail closed, as the login form does
+        secureLogger.error('MFA assurance check failed, signing out:', err);
+        if (!cancelled) await signOut();
       });
+
     return () => { cancelled = true; };
-  }, [mustCheck, user?.id]);
+  }, [checkKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!mustCheck || factorCheck === 'enrolled') return <>{children}</>;
+  if (state === 'allow') return <>{children}</>;
 
-  if (factorCheck === 'pending') {
+  if (state === 'checking') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
@@ -47,11 +67,15 @@ export const MfaRequirementGate: React.FC<{ children: React.ReactNode }> = ({ ch
 
   return (
     <div className="min-h-screen bg-slate-950">
-      <MFAEnrollment
-        onSuccess={() => window.location.reload()}
-        onCancel={signOut}
-        {...mfaEnrollmentCopy(requirement)}
-      />
+      {state === 'challenge' ? (
+        <MFAChallenge onSuccess={() => window.location.reload()} onCancel={signOut} />
+      ) : (
+        <MFAEnrollment
+          onSuccess={() => window.location.reload()}
+          onCancel={signOut}
+          {...mfaEnrollmentCopy(requirement)}
+        />
+      )}
     </div>
   );
 };

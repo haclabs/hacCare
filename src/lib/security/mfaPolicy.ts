@@ -69,3 +69,16 @@ export function isMfaSatisfied(aal: AssuranceLevel): boolean {
   if (aal.currentLevel === 'aal2') return true;
   return aal.nextLevel === 'aal2' && aal.currentAuthenticationMethods.some(m => (typeof m === 'string' ? m : m.method) === 'passkey');
 }
+
+export type MfaGateStep = 'allow' | 'challenge' | 'check-factors';
+
+/**
+ * What the /app gate does with a session. Anyone with an authenticator set up must
+ * have passed it, whatever their role. 'check-factors' means the session shows no
+ * factor but the role requires one, so ask the server (the session can be stale).
+ */
+export function mfaGateStep(aal: AssuranceLevel, requirement: MfaRequirement): MfaGateStep {
+  if (isMfaSatisfied(aal)) return 'allow';
+  if (aal.nextLevel === 'aal2') return 'challenge';
+  return requirement.status === 'required' ? 'check-factors' : 'allow';
+}

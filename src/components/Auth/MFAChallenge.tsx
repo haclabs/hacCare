@@ -161,8 +161,8 @@ export const MFAChallenge: React.FC<MFAChallengeProps> = ({ onSuccess, onCancel,
       return;
     }
 
-    // Fallback: restored-session path (no fresh accessToken) — Supabase client.
-    // TenantContext has already finished loading in this case so no lock contention.
+    // Fallback: restored-session and /app gate path (no fresh accessToken) — Supabase client.
+    // A concurrent TenantContext query only makes this wait for the auth lock.
     const { error: verifyError } = await supabase.auth.mfa.verify({
       factorId,
       challengeId,

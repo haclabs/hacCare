@@ -43,6 +43,9 @@ documented in this file.
   user (fingerprint, face or PIN), so a passkey alone counts as two factors
 * Requirement is also enforced on /app, so Microsoft sign-in and restored
   sessions no longer skip required 2FA setup
+* /app also asks for the code: anyone with an authenticator set up who
+  signed in with only a password (e.g. by typing /app after the password
+  step) now gets the code screen before the app loads
 
 ===============================================================================
 [Unreleased] - 2026-11-20 - PASSKEY SETUP PROMPT

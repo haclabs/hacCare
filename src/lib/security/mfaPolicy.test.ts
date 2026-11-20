@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getMfaRequirement, isMfaSatisfied, MFA_ROLLOUT_DATE } from './mfaPolicy';
+import { getMfaRequirement, isMfaSatisfied, mfaGateStep, MFA_ROLLOUT_DATE } from './mfaPolicy';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const afterRollout = (days: number) => new Date(MFA_ROLLOUT_DATE.getTime() + days * DAY_MS);
@@ -47,5 +47,27 @@ describe('isMfaSatisfied', () => {
 
   it('does not let a passkey stand in for setting up the authenticator app', () => {
     expect(isMfaSatisfied({ currentLevel: 'aal1', nextLevel: 'aal1', currentAuthenticationMethods: passkey })).toBe(false);
+  });
+});
+
+describe('mfaGateStep', () => {
+  const password = [{ method: 'password' }];
+  const required = { status: 'required' } as const;
+  const optional = { status: 'optional' } as const;
+
+  it('challenges a password session that skipped the code, whatever the role', () => {
+    const aal = { currentLevel: 'aal1', nextLevel: 'aal2', currentAuthenticationMethods: password };
+    expect(mfaGateStep(aal, optional)).toBe('challenge');
+    expect(mfaGateStep(aal, required)).toBe('challenge');
+  });
+
+  it('lets a session through once the code has been entered', () => {
+    expect(mfaGateStep({ currentLevel: 'aal2', nextLevel: 'aal2', currentAuthenticationMethods: password }, required)).toBe('allow');
+  });
+
+  it('checks the server for factors only when the role requires 2FA', () => {
+    const aal = { currentLevel: 'aal1', nextLevel: 'aal1', currentAuthenticationMethods: password };
+    expect(mfaGateStep(aal, required)).toBe('check-factors');
+    expect(mfaGateStep(aal, optional)).toBe('allow');
   });
 });
