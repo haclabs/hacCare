@@ -174,3 +174,4 @@ Temporary Items
 .nfs*
 *storybook.log
 storybook-static
+.taste-skill/

@@ -6,8 +6,7 @@ export const CANADIAN_SCHOOLS: MarketingPageContent = {
   title: 'Academic EHR for Canadian Nursing Schools | hacCare',
   description:
     'An academic EHR built in Canada: data stored in Canada, Canadian clinical standards and one institution licence. Students never buy an access code.',
-  eyebrow: 'For Canadian nursing schools',
-  h1: 'An academic EHR built in Canada, for Canadian programs',
+  h1: 'An academic EHR built in Canada',
   lead:
     'Many educational EHRs are designed for the US market. hacCare is built here: data stored in Canada, Canadian clinical standards and a licence that works the way Canadian institutions buy.',
   highlights: [
@@ -24,6 +23,20 @@ export const CANADIAN_SCHOOLS: MarketingPageContent = {
       body: 'hacCare is licensed to the institution for the academic year. Students never buy an access code.',
     },
   ],
+  image: {
+    src: '/images/barcode-scanning.webp',
+    alt: 'Student nurse scanning a patient wristband in a Canadian simulation lab',
+    width: 600,
+    height: 450,
+    caption: 'Wristband first, then the medication.',
+  },
+  screenshot: {
+    src: '/images/template.webp',
+    alt: 'Simulation template cards with program tags in hacCare',
+    width: 488,
+    height: 329,
+    caption: 'Scenario templates, organised by program.',
+  },
   sections: [
     {
       heading: 'Data residency, settled',
@@ -71,8 +84,7 @@ export const SECURITY: MarketingPageContent = {
   title: 'Privacy & Security | hacCare',
   description:
     'hacCare stores student and simulation data in Canada, keeps every institution isolated and uses only fictional patients. Designed around PIPEDA.',
-  eyebrow: 'Privacy and security',
-  h1: 'Privacy and security your institution can sign off on',
+  h1: 'Privacy your school can sign off',
   lead:
     'Built for the questions procurement, IT and privacy offices ask before anything reaches students.',
   highlights: [
@@ -89,6 +101,20 @@ export const SECURITY: MarketingPageContent = {
       body: 'Each institution’s data is separated at the database level. One school can never see another’s.',
     },
   ],
+  image: {
+    src: '/images/nurse-scanning.webp',
+    alt: 'Student nurse scanning a medication label at a simulated bedside',
+    width: 600,
+    height: 450,
+    caption: 'Every patient in hacCare is fictional.',
+  },
+  screenshot: {
+    src: '/images/barcode_med_admin.jpg',
+    alt: 'hacCare medication administration record for a fictional patient',
+    width: 672,
+    height: 310,
+    caption: 'Every record in hacCare belongs to a fictional patient.',
+  },
   sections: [
     {
       heading: 'Canadian data residency',
@@ -136,8 +162,7 @@ export const ABOUT: MarketingPageContent = {
   title: 'About hacCare | Built in Lethbridge, Alberta',
   description:
     'hacCare is a simulated EMR for nursing and healthcare education, built by haclabs Inc. in Lethbridge, Alberta, and used in Canadian simulation labs.',
-  eyebrow: 'About hacCare',
-  h1: 'Built in Lethbridge, for Canadian nursing education',
+  h1: 'Built in Lethbridge, Alberta',
   lead: 'hacCare is made by haclabs Inc., a software and cybersecurity company in Lethbridge, Alberta.',
   highlights: [
     {
@@ -146,13 +171,27 @@ export const ABOUT: MarketingPageContent = {
     },
     {
       title: 'In real labs',
-      body: 'Students at Lethbridge Polytechnic use hacCare at the bedside, scanning real barcodes on real equipment.',
+      body: 'Students at Lethbridge Polytechnic use hacCare at the bedside, scanning real QR codes on real equipment.',
     },
     {
       title: 'Security by background',
       body: 'Built by a cybersecurity company, so privacy and security are part of the design.',
     },
   ],
+  image: {
+    src: '/images/barcode-scanning.webp',
+    alt: 'Student nurse scanning a patient wristband at Lethbridge Polytechnic',
+    width: 600,
+    height: 450,
+    caption: 'hacCare in use at Lethbridge Polytechnic.',
+  },
+  screenshot: {
+    src: '/images/debrief.webp',
+    alt: 'hacCare debrief report showing each student’s documented activity',
+    width: 488,
+    height: 329,
+    caption: 'A debrief report from a simulation.',
+  },
   sections: [
     {
       heading: 'What we build',
