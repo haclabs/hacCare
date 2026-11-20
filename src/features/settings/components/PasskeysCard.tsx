@@ -15,8 +15,8 @@ const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString() :
 
 /**
  * Lets the signed-in user register and remove passkeys for passwordless sign-in.
- * Passkeys replace the password only — they do not satisfy MFA, so users with an
- * authenticator app are still asked for a code after signing in with a passkey.
+ * Passkeys don't replace the authenticator app, but once it is set up a passkey
+ * sign-in is accepted instead of the code (see isMfaSatisfied in mfaPolicy.ts).
  */
 export const PasskeysCard: React.FC = () => {
   const [passkeys, setPasskeys] = useState<PasskeyItem[]>([]);
@@ -84,8 +84,8 @@ export const PasskeysCard: React.FC = () => {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Passkeys</h2>
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        Sign in with Face ID, Touch ID, Windows Hello or a security key instead of your password.
-        If you use two-factor authentication you will still be asked for your code.
+        Sign in with Face ID, Touch ID, Windows Hello or a security key with a PIN instead of your password.
+        Once two-factor authentication is set up, signing in with a passkey skips the code.
       </p>
 
       {error && (

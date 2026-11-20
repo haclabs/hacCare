@@ -1,192 +1,101 @@
-# Microsoft Office 365 / Azure AD OAuth Setup Guide
+# Microsoft (Azure / Entra ID) Sign-In Setup
 
-This guide will help you configure Microsoft Office 365 (Azure AD) sign-in for HacCare.
+The "Sign in with Microsoft" button on `/login` calls
+`supabase.auth.signInWithOAuth({ provider: 'azure' })`. The code is in place; the button only
+works once the **Azure provider is enabled on the Supabase project**. Until then it fails with
+"Unsupported provider: provider is not enabled".
 
-## Prerequisites
+Check the live state with:
 
-- Azure AD tenant (Office 365 account)
-- Admin access to Azure Portal
-- Supabase project with authentication enabled
-
-## Step 1: Register Application in Azure Portal
-
-1. **Go to Azure Portal**
-   - Navigate to [https://portal.azure.com](https://portal.azure.com)
-   - Sign in with your Office 365 admin account
-
-2. **Register a New Application**
-   - Go to **Azure Active Directory** → **App registrations**
-   - Click **New registration**
-   - Fill in the details:
-     ```
-     Name: HacCare Healthcare System
-     Supported account types: Accounts in this organizational directory only (Single tenant)
-     Redirect URI: Web - https://YOUR_SUPABASE_PROJECT.supabase.co/auth/v1/callback
-     ```
-   - Click **Register**
-
-3. **Note Your Application Details**
-   - Copy the **Application (client) ID** - you'll need this
-   - Copy the **Directory (tenant) ID** - you'll need this
-
-4. **Create a Client Secret**
-   - Go to **Certificates & secrets**
-   - Click **New client secret**
-   - Add a description: "HacCare Production"
-   - Choose expiration (recommend 24 months)
-   - Click **Add**
-   - **IMPORTANT**: Copy the secret **Value** immediately (it won't be shown again)
-
-5. **Configure API Permissions**
-   - Go to **API permissions**
-   - Click **Add a permission**
-   - Choose **Microsoft Graph**
-   - Choose **Delegated permissions**
-   - Add these permissions:
-     - `email`
-     - `openid`
-     - `profile`
-     - `User.Read`
-   - Click **Add permissions**
-   - Click **Grant admin consent** (requires admin rights)
-
-6. **Configure Authentication Settings**
-   - Go to **Authentication**
-   - Under **Implicit grant and hybrid flows**, enable:
-     - ✅ ID tokens (used for implicit and hybrid flows)
-   - Click **Save**
-
-## Step 2: Configure Supabase
-
-1. **Go to Your Supabase Dashboard**
-   - Navigate to [https://app.supabase.com](https://app.supabase.com)
-   - Select your project
-
-2. **Enable Azure OAuth Provider**
-   - Go to **Authentication** → **Providers**
-   - Find **Azure** in the list
-   - Toggle it **ON**
-
-3. **Enter Azure Credentials**
-   ```
-   Azure Client ID: [Your Application (client) ID from Step 1.3]
-   Azure Secret: [Your Client Secret Value from Step 1.4]
-   Azure Tenant ID: [Your Directory (tenant) ID from Step 1.3]
-   ```
-
-4. **Configure Redirect URLs**
-   - In Supabase, go to **Authentication** → **URL Configuration**
-   - Add your application URL to **Redirect URLs**:
-     ```
-     http://localhost:5173/auth/callback    (for development)
-     https://yourdomain.com/auth/callback   (for production)
-     ```
-
-## Step 3: Update Your Application Routes
-
-Add the auth callback route to your React Router configuration:
-
-```tsx
-import { AuthCallback } from './components/Auth/AuthCallback';
-
-// In your router:
-<Route path="/auth/callback" element={<AuthCallback />} />
+```bash
+curl -s "$VITE_SUPABASE_URL/auth/v1/settings" -H "apikey: $VITE_SUPABASE_ANON_KEY" | grep -o '"azure":[a-z]*'
 ```
 
-## Step 4: Test the Integration
+## How the flow works
 
-1. **Start your development server**
-   ```bash
-   npm run dev
+1. `LoginForm.handleMicrosoftSignIn()` redirects to Microsoft (PKCE flow), with
+   `redirectTo = <current origin>/login`.
+2. Microsoft → Supabase (`https://<project-ref>.supabase.co/auth/v1/callback`) → back to
+   `/login?code=…`.
+3. The Supabase client (`detectSessionInUrl: true`) exchanges the code on page load. The PKCE
+   verifier is kept in `sessionStorage`, so the sign-in must start and finish on the **same origin
+   in the same tab**.
+4. `LoginForm`'s restored-session effect waits for the user and profile, applies the 2FA policy
+   (`src/lib/security/mfaPolicy.ts`: TOTP challenge or required enrollment), then redirects to the app.
+5. If the provider returns an error, Supabase appends `?error=…&error_description=…` and
+   `LoginForm` shows it.
+
+**Accounts are invitation-only.** Once public sign-up is turned off (Authentication → Sign In /
+Providers → "Allow new users to sign up"), Microsoft sign-in works only for users an admin has
+already created. Supabase links the Microsoft identity to the existing account when the emails
+match and Microsoft reports the email as verified, which requires the `xms_edov` claim in Step 1.
+While sign-up is still on, a first-time Microsoft user gets a `user_profiles` row from the
+`on_auth_user_created` trigger (`ensure_user_profile()`), with role `nurse` and no tenant.
+
+## Step 1: Register the app in Microsoft Entra ID
+
+1. [portal.azure.com](https://portal.azure.com) → **Microsoft Entra ID** → **App registrations** →
+   **New registration**.
+2. **Supported account types**: *Accounts in this organizational directory only (Single tenant)*.
+   This plus the tenant URL in Step 2 keeps outside Microsoft accounts from creating users.
+3. **Redirect URI** (Web): `https://<project-ref>.supabase.co/auth/v1/callback`
+4. Copy the **Application (client) ID** and **Directory (tenant) ID**.
+5. **Certificates & secrets** → **New client secret**. Copy the secret **Value** (not the Secret ID)
+   and set a calendar reminder before it expires.
+6. **Manifest**: add the `email` and `xms_edov` optional claims so Supabase can confirm the email is
+   verified (prevents account impersonation through unverified email domains):
+
+   ```json
+   "optionalClaims": {
+     "idToken": [
+       { "name": "xms_edov", "source": null, "essential": false, "additionalProperties": [] },
+       { "name": "email", "source": null, "essential": false, "additionalProperties": [] }
+     ],
+     "accessToken": [
+       { "name": "xms_edov", "source": null, "essential": false, "additionalProperties": [] }
+     ],
+     "saml2Token": []
+   }
    ```
 
-2. **Navigate to login page**
-   - Go to `http://localhost:5173/login`
+No implicit-grant / ID-token checkbox is needed.
 
-3. **Click "Sign in with Microsoft"**
-   - You should be redirected to Microsoft login
-   - Sign in with your Office 365 account
-   - Grant permissions when prompted
-   - You should be redirected back to your app
+## Step 2: Enable the provider in Supabase
+
+Dashboard → **Authentication** → **Sign In / Providers** → **Azure** → enable, then enter:
+
+| Field | Value |
+|---|---|
+| Client ID | Application (client) ID |
+| Secret | Client secret **Value** |
+| Azure Tenant URL | `https://login.microsoftonline.com/<directory-tenant-id>` |
+
+Leaving the tenant URL empty uses `common`, which accepts any Microsoft account.
+
+Do **not** use `supabase config push` for this. It would also push the placeholder
+`site_url` / redirect URLs from `supabase/config.toml` over production.
+
+## Step 3: Allow the redirect URLs
+
+Dashboard → **Authentication** → **URL Configuration** → **Redirect URLs**. Add every origin users
+sign in from, with the `/login` path:
+
+```
+https://haccare.app/login
+https://*.haccare.app/login
+http://localhost:5173/login
+```
+
+If the `redirectTo` URL is not on the list, Supabase falls back to the Site URL. On a different
+origin the PKCE verifier is missing and the sign-in silently fails.
 
 ## Troubleshooting
 
-### Error: "AADSTS50011: Reply URL mismatch"
-- **Problem**: The redirect URI in Azure doesn't match Supabase's callback URL
-- **Solution**: In Azure Portal → App registration → Authentication, verify the redirect URI is exactly:
-  ```
-  https://YOUR_SUPABASE_PROJECT.supabase.co/auth/v1/callback
-  ```
-
-### Error: "AADSTS65001: User consent required"
-- **Problem**: Admin consent not granted for permissions
-- **Solution**: In Azure Portal → API permissions, click "Grant admin consent for [Your Organization]"
-
-### Error: "Invalid client secret"
-- **Problem**: The client secret expired or was entered incorrectly
-- **Solution**: Generate a new client secret in Azure Portal and update it in Supabase
-
-### Users redirected but not authenticated
-- **Problem**: The callback route is not set up
-- **Solution**: Ensure `/auth/callback` route is configured in your React Router
-
-### "oauth_failed" error after redirect
-- **Problem**: User profile not created or session not established
-- **Solution**: Check Supabase logs for more details about the authentication failure
-
-## Security Considerations
-
-1. **Single Tenant vs Multi-Tenant**
-   - Current setup is single tenant (your organization only)
-   - For multi-tenant, choose "Accounts in any organizational directory" during app registration
-
-2. **Client Secret Rotation**
-   - Rotate client secrets regularly (every 6-12 months)
-   - Azure allows multiple secrets, so you can add a new one before deleting the old
-
-3. **User Provisioning**
-   - First-time Microsoft users will need a user profile created in HacCare
-   - Consider implementing automatic user provisioning or just-in-time (JIT) provisioning
-
-4. **Session Management**
-   - OAuth sessions follow your Supabase JWT token expiration settings
-   - Configure in Supabase → Settings → API
-
-## Additional Configuration
-
-### Custom Login Domains (Optional)
-If you want to use a custom domain instead of Supabase's:
-1. Set up a custom domain in Supabase
-2. Update the redirect URI in Azure to use your custom domain
-3. Update the callback URL in your application
-
-### Restrict Access by Email Domain
-To only allow users from your organization:
-1. In Azure Portal → App registration → Authentication
-2. Under **Supported account types**, ensure "Single tenant" is selected
-3. This automatically restricts to your Office 365 domain
-
-### Add Company Branding
-1. In Azure Portal → Azure Active Directory → Company branding
-2. Upload your logo and customize the sign-in page
-3. Users will see your branding during Microsoft login
-
-## Production Checklist
-
-Before going to production:
-
-- [ ] Client secret stored securely (not in code)
-- [ ] Redirect URLs configured for production domain
-- [ ] Admin consent granted for all required permissions
-- [ ] Custom domain configured (optional but recommended)
-- [ ] Error handling tested
-- [ ] User provisioning strategy implemented
-- [ ] Client secret expiration reminder set
-- [ ] Backup authentication method available (email/password)
-
-## Support
-
-For issues with:
-- **Azure AD setup**: Contact Microsoft Azure Support
-- **Supabase OAuth**: Check Supabase documentation or Discord
-- **HacCare integration**: Contact your development team
+| Symptom | Cause |
+|---|---|
+| "Unsupported provider: provider is not enabled" | Step 2 not done |
+| `AADSTS50011` reply URL mismatch | Azure redirect URI ≠ `https://<project-ref>.supabase.co/auth/v1/callback` |
+| `AADSTS700016` / app not found in directory | Tenant URL points at a different directory than the app registration |
+| "Error getting user email from external provider" | Missing `email` scope or optional claim (Step 1.6) |
+| "Signups not allowed for this instance" | The user has no hacCare account yet. An admin must create one with the same email |
+| Returned to the landing page or a different subdomain, not signed in | `redirectTo` URL not in the allow list (Step 3) |

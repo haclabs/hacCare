@@ -6,6 +6,7 @@ import { useAuth } from '../../../../hooks/useAuth';
 import { getAllTenants } from '../../../../services/admin/tenantService';
 import { getPrograms, getUserPrograms, bulkAssignUserToPrograms, type Program } from '../../../../services/admin/programService';
 import { inviteUser } from '../../../../services/admin/inviteUserService';
+import { createUserWithPassword } from '../../../../services/admin/createUserService';
 import { updateUserEmail } from '../../../../services/admin/updateUserEmailService';
 import { Tenant } from '../../../../types';
 import { secureLogger } from '../../../../lib/security/secureLogger';
@@ -145,8 +146,7 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
     setError('');
     setLoading(true);
 
-    let authData: Awaited<ReturnType<typeof supabase.auth.signUp>>['data'] | null = null;
-    let invitedUserId: string | undefined;
+    let createdUserId: string | undefined;
 
     // Shared post-creation steps (profile fields + tenant assignment) used by
     // both the manual-password and invite-email creation paths.
@@ -297,9 +297,9 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             return;
           }
 
-          invitedUserId = inviteResult.userId;
+          createdUserId = inviteResult.userId;
 
-          const finalized = await finalizeNewUser(invitedUserId);
+          const finalized = await finalizeNewUser(createdUserId);
           if (!finalized) return;
         } else {
           if (!formData.password) {
@@ -307,59 +307,29 @@ export const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSuccess }) 
             return;
           }
 
-          // Log what we're about to send
           secureLogger.debug('Creating new user', { email: formData.email });
 
-          const signUpResult = await supabase.auth.signUp({
+          const { userId: newId, error: createError } = await createUserWithPassword({
             email: formData.email,
             password: formData.password,
-            options: {
-              data: {
-                first_name: formData.first_name,
-                last_name: formData.last_name,
-              }
-            }
+            firstName: formData.first_name,
+            lastName: formData.last_name,
           });
-          authData = signUpResult.data;
-          const authError = signUpResult.error;
 
-          if (authError) {
-            setError(parseAuthError(authError));
+          if (createError || !newId) {
+            setError(createError || 'Failed to create user');
             return;
           }
 
-          // Supabase returns null user (no error) when the email already exists.
-          // This is intentional on their end to prevent email enumeration, but we
-          // need to surface it clearly here.
-          if (!authData.user) {
-            setError('Unable to create user. The email address may already be registered. Check Supabase Auth > Users to confirm.');
-            return;
-          }
+          createdUserId = newId;
 
-          // For admin-created users, immediately confirm their email so they can login
-          try {
-            const { error: confirmError } = await supabase
-              .rpc('confirm_user_email', {
-                target_user_id: authData.user.id
-              });
-
-            if (confirmError) {
-              secureLogger.error('Error confirming user email', confirmError);
-              // Don't fail the creation, just warn
-              secureLogger.warn('User created but email not confirmed. They may need to confirm via email.');
-            }
-          } catch (confirmError: unknown) {
-            secureLogger.error('Error in email confirmation', confirmError);
-            // Continue with user creation even if confirmation fails
-          }
-
-          const finalized = await finalizeNewUser(authData.user.id);
+          const finalized = await finalizeNewUser(createdUserId);
           if (!finalized) return;
         }
       }
 
       // Handle program assignments for instructors and coordinators (left to coordinators when an admin saves)
-      const userId = canAssignPrograms ? user?.id || authData?.user?.id || invitedUserId : undefined;
+      const userId = canAssignPrograms ? user?.id || createdUserId : undefined;
       if (userId && (formData.role === 'instructor' || formData.role === 'coordinator')) {
         // Always run bulkAssignUserToPrograms - it will clear old assignments if empty
         secureLogger.debug('Assigning programs to user');

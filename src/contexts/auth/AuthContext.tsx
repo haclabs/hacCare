@@ -5,6 +5,7 @@ import { supabase, UserProfile, isSupabaseConfigured } from '../../lib/api/supab
 import { parseAuthError } from '../../utils/authErrorParser';
 // authPersistence import removed — initializeAuth now uses a single getSession() call
 import { secureLogger } from '../../lib/security/secureLogger';
+import { signInWithVerifiedPasskey } from '../../lib/security/verifiedPasskeySignIn';
 import { errorMessageIncludes, getErrorMessage, getErrorName } from '@/lib/errors';
 
 /**
@@ -18,7 +19,7 @@ interface AuthContextType {
   isOffline: boolean;                                   // Offline state indicator
   isAnonymous: boolean;                                 // Anonymous simulation user indicator
   signIn: (email: string, password: string) => Promise<{ error: any; profile?: UserProfile | null; accessToken?: string }>; // Sign in function
-  signInWithPasskey: () => Promise<{ error: unknown; profile?: UserProfile | null; accessToken?: string }>; // Passwordless sign in (still subject to MFA)
+  signInWithPasskey: () => Promise<{ error: unknown; profile?: UserProfile | null; accessToken?: string }>; // Passwordless sign in (user-verified passkey; satisfies MFA)
   signOut: () => Promise<void>;                        // Sign out function
   hasRole: (roles: string | string[]) => boolean;     // Role-based access control helper
   createProfile: () => Promise<void>;                 // Create user profile function
@@ -211,45 +212,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             const handleProfileFetch = async () => {
               try {
+                // New users (including first-time Microsoft sign-ins) get their profile from the
+                // on_auth_user_created trigger, so there is nothing to create here.
                 await fetchUserProfile(session.user.id);
-                
-                // After fetching, if no profile found and user signed in via OAuth, auto-create
-                // Check using a fresh query since state may not be updated yet
-                const { data: existingProfile } = await supabase
-                  .from('user_profiles')
-                  .select('id')
-                  .eq('id', session.user.id)
-                  .maybeSingle();
-                
-                if (!existingProfile && session.user.app_metadata?.provider === 'azure') {
-                  secureLogger.debug('🔧 OAuth user without profile detected, creating profile...');
-                  try {
-                    // Create profile with OAuth user metadata
-                    const { data: newProfile, error: createError } = await supabase
-                      .from('user_profiles')
-                      .upsert({
-                        id: session.user.id,
-                        email: session.user.email || '',
-                        first_name: session.user.user_metadata?.given_name || session.user.user_metadata?.first_name || 'User',
-                        last_name: session.user.user_metadata?.family_name || session.user.user_metadata?.last_name || '',
-                        role: 'nurse', // Default role for OAuth users
-                        is_active: true
-                      }, {
-                        onConflict: 'id'
-                      })
-                      .select()
-                      .single();
-                    
-                    if (createError) {
-                      secureLogger.error('❌ Failed to auto-create profile:', createError);
-                    } else {
-                      secureLogger.debug('✅ Profile auto-created for OAuth user:', newProfile);
-                      setProfile(newProfile);
-                    }
-                  } catch (createError) {
-                    secureLogger.error('❌ Exception creating profile:', createError);
-                  }
-                }
               } catch (error) {
                 secureLogger.error('Profile fetch failed on auth change:', error);
               }
@@ -655,9 +620,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * Sign in with a passkey (WebAuthn discoverable credential).
-   * This replaces the password only: the session is aal1, so callers must run
-   * the same MFA assurance check as the password path.
+   * Sign in with a passkey (WebAuthn discoverable credential) that requires
+   * fingerprint/face/PIN verification. The session is still aal1; the MFA policy
+   * accepts it in place of a TOTP code (see isMfaSatisfied).
    */
   const signInWithPasskey = async () => {
     if (!isSupabaseConfigured) {
@@ -666,7 +631,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPasskey();
+      const { data, error } = await signInWithVerifiedPasskey();
       if (error || !data?.session?.user) {
         setLoading(false);
         return { error: error ?? { message: 'Passkey sign-in did not return a session' } };

@@ -24,7 +24,7 @@ WHERE p.pronamespace = 'public'::regnamespace AND p.prokind = 'f'
 ORDER BY 1;
 ```
 
-**Totals:** 104 functions: 40 called by the app, 2 by edge functions, 2 event triggers, 26 trigger functions, 34 internal helpers, 0 unreferenced.
+**Totals:** 104 functions: 39 called by the app, 2 by edge functions, 2 event triggers, 26 trigger functions, 34 internal helpers, 1 unreferenced.
 
 **Flags:** `definer` = `SECURITY DEFINER` (bypasses RLS, so it must check its caller); `guarded` = its
 first statement is a `PERFORM public.assert_*(...)  -- access guard` line.
@@ -32,7 +32,7 @@ first statement is a `PERFORM public.assert_*(...)  -- access guard` line.
 
 ---
 
-## 1. Called by the app (40)
+## 1. Called by the app (39)
 
 ### Simulation lifecycle
 
@@ -95,7 +95,6 @@ first statement is a `PERFORM public.assert_*(...)  -- access guard` line.
 |---|---|---|---|
 | `find_user_by_email` | definer · guarded | Look up a user by email | `src/features/admin/components/management/ManagementDashboard.tsx` |
 | `get_available_admin_users` | definer · guarded | Users eligible as tenant admins | `src/features/admin/components/management/ManagementDashboard.tsx` |
-| `confirm_user_email` | definer · guarded | Confirm a user's email (admin) | `src/features/admin/components/users/UserForm.tsx` |
 | `deactivate_user` | definer · guarded | Soft-delete a user | `src/features/admin/components/users/UserManagement.tsx` |
 | `reactivate_user` | definer · guarded | Restore a deactivated user | `src/features/admin/components/users/UserManagement.tsx` |
 | `delete_user_permanently` | definer · guarded | Hard-delete a user | `src/features/admin/components/users/UserManagement.tsx` |
@@ -183,7 +182,11 @@ Not called by the app directly, but used by other functions or RLS policies. Do 
 | `user_institution_ids` | functions: `caller_can_administer_user`, `get_user_institutions` |
 | `user_may_join_tenant` | functions: `ensure_tenant_access` |
 
-## 6. Unreferenced (0)
+## 6. Unreferenced (1)
+
+| Function | Flags | Notes |
+|---|---|---|
+| `confirm_user_email` | definer · guarded | Was called by the admin user form after `auth.signUp()`. The form now uses the `create-user` edge function, which creates accounts already confirmed. Drop it once that release is live, and remove it from the guard list in `supabase/tests/verify_rls_isolation.sql` in the same change. |
 
 On 2026-10-28 two migrations dropped 51 functions that nothing referenced:
 

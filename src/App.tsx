@@ -14,7 +14,7 @@ import LoadingSpinner from './components/UI/LoadingSpinner';
 import { Patient, Medication } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useWelcomeModal } from './hooks/useWelcomeModal';
-import { AuthCallback } from './components/Auth/AuthCallback';
+import { usePasskeySetupPrompt } from './features/settings/hooks/usePasskeySetupPrompt';
 import { TemplateEditingBanner } from './features/simulation/components/TemplateEditingBanner';
 import { PatientForm } from './features/patients/components/forms/PatientForm';
 import { EchoModeSuggestion } from './features/echo/components/EchoModeSuggestion';
@@ -56,6 +56,7 @@ const ProgramWorkspace = lazy(() => import('./components/Program/ProgramWorkspac
 const ProgramSelectorModal = lazy(() => import('./components/Program/ProgramSelectorModal'));
 const ProgramStudents = lazy(() => import('./components/Program/ProgramStudents'));
 const WelcomeModal = lazy(() => import('./components/Onboarding/WelcomeModal'));
+const PasskeySetupPrompt = lazy(() => import('./features/settings/components/PasskeySetupPrompt'));
 
 /**
  * Main Application Component
@@ -78,6 +79,7 @@ function App() {
   const { user, profile } = useAuth();
   const { currentTenant } = useTenant();
   const welcomeTour = useWelcomeModal();
+  const passkeyPrompt = usePasskeySetupPrompt();
 
   // Application state management
   const [searchParams, setSearchParams] = useSearchParams();
@@ -712,7 +714,6 @@ function App() {
         <main className="p-8 pl-16">
             <Routes>
               <Route index element={renderContent()} />
-              <Route path="auth/callback" element={<AuthCallback />} />
               <Route path="simulation-portal" element={
                 <SafeSuspense>
                   <SimulationRouter />
@@ -745,6 +746,17 @@ function App() {
       {currentTenant && welcomeTour.isOpen && (
         <SafeSuspense fallback={null}>
           <WelcomeModal onSkip={welcomeTour.skip} onFinish={welcomeTour.dismissForever} />
+        </SafeSuspense>
+      )}
+
+      {/* Passkey setup nudge - waits for the program selector and welcome tour to close */}
+      {currentTenant && !welcomeTour.isOpen && passkeyPrompt.isOpen && (
+        <SafeSuspense fallback={null}>
+          <PasskeySetupPrompt
+            onNotNow={passkeyPrompt.notNow}
+            onNeverAsk={passkeyPrompt.neverAsk}
+            onDone={passkeyPrompt.close}
+          />
         </SafeSuspense>
       )}
 

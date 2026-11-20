@@ -12,7 +12,7 @@ Supabase Auth, with optional Microsoft Office 365 sign-in.
 |---|---|
 | Auth context | `src/contexts/auth/AuthContext.tsx` |
 | Login form | `src/components/Auth/LoginForm.tsx` |
-| OAuth callback | `src/components/Auth/AuthCallback.tsx` |
+| Microsoft (Azure) sign-in | `LoginForm.tsx` — returns to `/login`; see `MICROSOFT_OAUTH_SETUP.md` |
 
 Roles are `super_admin` → `coordinator` → `admin` → `instructor` → `nurse`
 (plus `student` for simulation participants). A role change needs a
