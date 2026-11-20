@@ -12,7 +12,7 @@ export const LabGallery: React.FC = () => (
         <div className="gallery__frame gallery__frame--tall site-wipe">
           <img
             src="/images/nurse-scanning.webp"
-            alt="Student nurse scanning a medication barcode at a simulated patient bedside"
+            alt="Student nurse scanning a medication label at a simulated patient bedside"
             width={600}
             height={450}
             loading="lazy"

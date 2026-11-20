@@ -14,9 +14,9 @@
   border-top-left-radius: clamp(140px, 17vw, 260px);
 }
 .hero__snap { position: absolute; left: 34px; top: 210px; width: 30px; height: 30px; border-radius: 50%; background: var(--ground); }
-.hero__barcode { position: absolute; right: var(--margin); top: 56px; width: 120px; height: 64px; fill: var(--deep); }
+.hero__qr { position: absolute; right: var(--margin); top: 56px; width: 104px; height: 104px; color: var(--ink); }
 .hero__fragment { position: absolute; left: clamp(110px, 9.5vw, 140px); top: 56px; width: min(560px, calc(100% - 150px)); }
-@media (max-width: 1279px) { .hero__barcode { display: none; } }
+@media (max-width: 1279px) { .hero__qr { display: none; } }
 
 .hero__dialog { border: 0; padding: 0; background: transparent; width: min(1100px, 92vw); max-width: none; }
 .hero__dialog::backdrop { background: rgba(5, 20, 18, 0.86); }
@@ -54,7 +54,7 @@
 @media (hover: hover) and (pointer: fine) { .bcma__scan:not(.is-done):hover, .bcma__give:hover { background: var(--accent-strong); } }
 .bcma__labels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .bcma__med {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-height: 44px; padding: 12px;
+  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px;
   border: 1px solid #c9d8d4; border-radius: 10px; background: #fff; color: var(--ink); /* taste-skill-ignore: data-ui interface fragment */
   font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer;
   transition: transform 120ms var(--ease-out), border-color 160ms ease, background-color 160ms ease;
@@ -63,7 +63,9 @@
 @media (hover: hover) and (pointer: fine) { .bcma__med:hover { border-color: var(--accent); } }
 .bcma__med.is-wrong { border-color: var(--alert); background: #fdecea; }
 .bcma__med.is-right { border-color: var(--accent); background: #e6f4f0; }
-.bcma__code { width: 64px; height: 20px; fill: var(--ink); }
+.bcma__code { width: 44px; height: 44px; flex: none; color: var(--ink); }
+.bcma__wrist-qr { width: 48px; height: 48px; flex: none; color: var(--ink); }
+.bcma__who { flex: 1; min-width: 0; }
 .bcma__status { min-height: 20px; }
 .bcma__alert { color: var(--alert); font-weight: 700; font-size: 14px; }
 .bcma__rights { display: flex; flex-wrap: wrap; gap: 8px; }

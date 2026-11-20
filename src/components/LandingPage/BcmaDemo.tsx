@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check } from 'lucide-react';
+import { QrCode } from '../Marketing/QrCode';
 
 /**
  * The hero's live thing: a working miniature of a hacCare medication pass.
@@ -14,8 +15,8 @@ type Step = 'start' | 'wristband' | 'wrong' | 'verified' | 'given';
 
 const ORDER = { drug: 'Metoprolol', dose: '25 mg', route: 'PO', time: '09:00' };
 const LABELS = [
-  { id: 'wrong', text: 'Metoprolol 50 mg tablet' },
-  { id: 'right', text: 'Metoprolol 25 mg tablet' },
+  { id: 'wrong', text: 'Metoprolol 50 mg tablet', qr: 'med50' },
+  { id: 'right', text: 'Metoprolol 25 mg tablet', qr: 'med25' },
 ] as const;
 const RIGHTS = ['Patient', 'Medication', 'Dose', 'Route', 'Time'];
 
@@ -52,7 +53,8 @@ export const BcmaDemo: React.FC = () => {
 
       <div className="bcma__body">
         <div className="bcma__patient">
-          <div>
+          <QrCode name="wristband" className="bcma__wrist-qr" />
+          <div className="bcma__who">
             <p className="bcma__name">Morgan Lee</p>
             <p className="bcma__meta">DOB 1958-03-14 · No known allergies</p>
           </div>
@@ -76,11 +78,7 @@ export const BcmaDemo: React.FC = () => {
               onClick={() => scanLabel(l.id)}
               disabled={step === 'given'}
             >
-              <svg viewBox="0 0 64 20" aria-hidden="true" className="bcma__code">
-                {[0, 3, 5, 9, 11, 14, 18, 20, 23, 27, 29, 33, 36, 38, 42, 45, 47, 51, 54, 56, 60].map((x, i) => (
-                  <rect key={x} x={x} y="0" width={i % 3 === 0 ? 2 : 1} height="20" />
-                ))}
-              </svg>
+              <QrCode name={l.qr} className="bcma__code" />
               {l.text}
             </button>
           ))}

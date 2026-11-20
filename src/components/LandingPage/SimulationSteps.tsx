@@ -13,7 +13,7 @@ const FIELDS = [
   {
     clause: 'Then launch it for a group.',
     status: 'Launched',
-    rows: [['Group', '6 students'], ['Barcodes', 'Printed']],
+    rows: [['Group', '6 students'], ['QR labels', 'Printed']],
   },
   {
     clause: 'Students work the shift.',

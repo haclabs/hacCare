@@ -103,7 +103,7 @@ export const SECURITY: MarketingPageContent = {
   ],
   image: {
     src: '/images/nurse-scanning.webp',
-    alt: 'Student nurse scanning a medication barcode at a simulated bedside',
+    alt: 'Student nurse scanning a medication label at a simulated bedside',
     width: 600,
     height: 450,
     caption: 'Every patient in hacCare is fictional.',
@@ -171,7 +171,7 @@ export const ABOUT: MarketingPageContent = {
     },
     {
       title: 'In real labs',
-      body: 'Students at Lethbridge Polytechnic use hacCare at the bedside, scanning real barcodes on real equipment.',
+      body: 'Students at Lethbridge Polytechnic use hacCare at the bedside, scanning real QR codes on real equipment.',
     },
     {
       title: 'Security by background',

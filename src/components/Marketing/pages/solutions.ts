@@ -25,7 +25,7 @@ export const BCMA_TRAINING: MarketingPageContent = {
   ],
   image: {
     src: '/images/nurse-scanning.webp',
-    alt: 'Student nurse scanning a medication barcode at a simulated patient bedside',
+    alt: 'Student nurse scanning a medication label at a simulated patient bedside',
     width: 600,
     height: 450,
     caption: 'A BCMA dual scan in a hacCare simulation lab.',
@@ -60,7 +60,7 @@ export const BCMA_TRAINING: MarketingPageContent = {
     {
       heading: 'Labels that last the semester',
       body: [
-        'Print wristbands and medication labels once and reuse them all semester. Resetting a simulation for the next group keeps the same barcodes.',
+        'Print wristbands and medication labels once and reuse them all semester. Resetting a simulation for the next group keeps the same QR codes.',
       ],
     },
     {
@@ -122,7 +122,7 @@ export const SIMULATION_LABS: MarketingPageContent = {
       body: ['hacCare follows the rhythm of a simulation day instead of asking the lab to work around the software.'],
       bullets: [
         'Build the patient once as a reusable scenario template.',
-        'Launch it for a group in seconds and print the barcodes.',
+        'Launch it for a group in seconds and print the QR labels.',
         'Students chart, scan medications and respond to alerts at the bedside.',
         'Reset for the next group.',
         'Review the debrief with your students.',
@@ -184,7 +184,7 @@ export const EDUCATORS: MarketingPageContent = {
   ],
   image: {
     src: '/images/nurse-scanning.webp',
-    alt: 'Student nurse scanning a medication barcode while an instructor watches the scenario',
+    alt: 'Student nurse scanning a medication label while an instructor watches the scenario',
     width: 600,
     height: 450,
     caption: 'A scenario running in the simulation lab.',

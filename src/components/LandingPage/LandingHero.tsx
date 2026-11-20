@@ -1,11 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BcmaDemo } from './BcmaDemo';
+import { QrCode } from '../Marketing/QrCode';
 
 const VIMEO_SRC =
   'https://player.vimeo.com/video/1162063037?badge=0&autopause=0&autoplay=1&title=0&byline=0&portrait=0&color=14776a';
-
-/** Barcode printed on the wristband stage. Decorative. */
-const BAND_BARS = [0, 4, 6, 11, 13, 17, 22, 24, 28, 33, 35, 40, 43, 45, 50, 54, 56, 61, 64, 66, 71, 75, 77, 82];
 
 /**
  * Hero: headline on the ground, and the wristband as a giant teal stage
@@ -42,11 +40,7 @@ export const LandingHero: React.FC = () => {
       <div className="hero__stage site-shutter">
         <div className="hero__stage-inner">
           <span className="hero__snap" aria-hidden="true" />
-          <svg className="hero__barcode" viewBox="0 0 84 40" aria-hidden="true" preserveAspectRatio="none">
-            {BAND_BARS.map((x, i) => (
-              <rect key={x} x={x} y="0" width={i % 4 === 0 ? 3 : 1.5} height="40" />
-            ))}
-          </svg>
+          <QrCode name="wristband" className="hero__qr" />
           <div className="hero__fragment">
             <BcmaDemo />
           </div>
