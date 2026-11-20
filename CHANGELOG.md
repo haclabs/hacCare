@@ -7,6 +7,55 @@ All notable changes to the hacCare Hospital Patient Record System will be
 documented in this file.
 
 ===============================================================================
+[Unreleased] - 2026-11-20 - MICROSOFT SIGN-IN FIX
+
+* "Sign in with Microsoft" now returns to /login, which finishes the
+  sign-in and applies the 2FA policy. Before, it sent users back to
+  /auth/callback, a route that did not exist outside /app. Provider
+  errors are now shown on the login page
+* The Azure provider still has to be enabled in Supabase. See
+  docs/features/auth/MICROSOFT_OAUTH_SETUP.md
+* Cleanup: removed the unreachable AuthCallback page and the client-side
+  OAuth profile creation in AuthContext, which never ran because the
+  on_auth_user_created trigger already creates the profile
+
+===============================================================================
+[Unreleased] - 2026-11-20 - INVITATION-ONLY ACCOUNTS
+
+* Admin "Add user" form creates password accounts through a new
+  create-user edge function (Supabase Admin API) instead of public
+  auth.signUp(), so public sign-up can be turned off. Accounts are
+  created already confirmed; duplicate emails and short passwords now
+  show a clear error
+* Cleanup: removed the unused createEphemeralAuthClient helper.
+  confirm_user_email is no longer called and will be dropped after release
+
+===============================================================================
+[Unreleased] - 2026-11-20 - TWO-FACTOR AUTHENTICATION FOR STAFF
+
+* Instructors, admins and coordinators must set up an authenticator app
+  (TOTP). They have 7 days from 2026-11-20, or from account creation if
+  later, during which the setup screen can be postponed with "Remind me
+  later"; after that they cannot reach the app until it is set up. Super
+  admins are unchanged (required immediately). A passkey does not replace
+  the authenticator app, but once it is set up, signing in with a passkey
+  skips the code. Passkey sign-in now requires the device to verify the
+  user (fingerprint, face or PIN), so a passkey alone counts as two factors
+* Requirement is also enforced on /app, so Microsoft sign-in and restored
+  sessions no longer skip required 2FA setup
+* /app also asks for the code: anyone with an authenticator set up who
+  signed in with only a password (e.g. by typing /app after the password
+  step) now gets the code screen before the app loads
+
+===============================================================================
+[Unreleased] - 2026-11-20 - PASSKEY SETUP PROMPT
+
+* Instructors, admins and coordinators without a passkey are offered one
+  after signing in. "Not now" asks again at the next login; "Don't ask
+  again" stops the prompt on that browser. Passkeys can still be added
+  or removed under Settings
+
+===============================================================================
 [Unreleased] - 2026-11-16 - CHARTING INTEGRITY FOLLOW-UPS
 
 * Security: flowsheet entries can no longer be deleted by signed-in users;

@@ -7,6 +7,7 @@ import { parseAuthError } from '../../utils/authErrorParser';
 import { User, AlertCircle, CheckCircle } from 'lucide-react';
 import { secureLogger } from '../../lib/security/secureLogger';
 import { HacCareLogo } from '../Layout/HacCareLogo';
+import { MfaRequirementGate } from './MfaRequirementGate';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -192,5 +193,5 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Security: All checks passed - render the protected content
-  return <>{children}</>;
+  return <MfaRequirementGate>{children}</MfaRequirementGate>;
 };

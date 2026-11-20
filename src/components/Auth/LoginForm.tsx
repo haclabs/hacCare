@@ -12,6 +12,7 @@ import { MFAChallenge } from './MFAChallenge';
 import { MFAEnrollment } from './MFAEnrollment';
 import { AlternativeSignInOptions } from './AlternativeSignInOptions';
 import { getPostLoginPath } from '../../features/echo/echoMode';
+import { getMfaRequirement, isMfaSatisfied, mfaEnrollmentCopy, type MfaRequirement } from '../../lib/security/mfaPolicy';
 
 const doRedirect = (simulationOnly?: boolean) => {
   window.location.href = getPostLoginPath(simulationOnly);
@@ -21,16 +22,21 @@ export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(() =>
-    new URLSearchParams(window.location.search).get('reason') === 'idle'
-      ? 'You were signed out after a period of inactivity. Please sign in again.'
-      : ''
-  );
+  const [error, setError] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('reason') === 'idle') {
+      return 'You were signed out after a period of inactivity. Please sign in again.';
+    }
+    // Supabase appends error/error_description when an OAuth (Microsoft) sign-in fails
+    const oauthError = params.get('error_description') || params.get('error');
+    return oauthError ? `Microsoft sign-in failed: ${oauthError}` : '';
+  });
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
   const [mfaMode, setMfaMode] = useState<'challenge' | 'enroll' | null>(null);
+  const [enrollRequirement, setEnrollRequirement] = useState<MfaRequirement>({ status: 'required' });
   // Access token stored so MFAChallenge can call listFactors/challenge via
   // direct fetch (no Supabase lock) to avoid contention with TenantContext.
   const [mfaAccessToken, setMfaAccessToken] = useState<string | undefined>(undefined);
@@ -43,11 +49,21 @@ export const LoginForm: React.FC = () => {
   const { signIn, signInWithPasskey, signOut, user, profile } = useAuth();
   const anySignInPending = loading || oauthLoading || passkeyLoading;
 
+  /** Opens enrollment when the user's role needs 2FA and they have no factor; returns whether it did. */
+  const promptEnrollmentIfRequired = (userProfile: UserProfile | null | undefined): boolean => {
+    const requirement = getMfaRequirement(userProfile);
+    if (requirement.status === 'optional') return false;
+    secureLogger.debug('🔐 No factor enrolled — showing enrollment', requirement.status);
+    setEnrollRequirement(requirement);
+    setMfaMode('enroll');
+    return true;
+  };
+
   // Redirect effect — covers two cases:
   // 1. Non-super_admin: redirect immediately once user+profile are available
   //    (OAuth sign-in or restored session — handleSubmit handles the direct path).
-  // 2. Super_admin with a RESTORED session (page reload / INITIAL_SESSION):
-  //    handleSubmit won't have been called, so we still need to gate on MFA here.
+  // 2. A RESTORED session (page reload / INITIAL_SESSION): handleSubmit won't have
+  //    been called, so we still need to gate on MFA (challenge or required enrollment) here.
   //
   // IMPORTANT: submitActiveRef guards against this effect firing while handleSubmit
   // is already executing the AAL check — that would create two concurrent
@@ -64,16 +80,13 @@ export const LoginForm: React.FC = () => {
         const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aalError) throw aalError;
 
-        if (aal.currentLevel === 'aal2') {
-          secureLogger.debug('✅ Restored session already at AAL2 — redirecting');
+        if (isMfaSatisfied(aal)) {
+          secureLogger.debug('✅ Restored session satisfies MFA (AAL2 or verified passkey) — redirecting');
           doRedirect(profile.simulation_only ?? undefined);
         } else if (aal.nextLevel === 'aal2') {
           secureLogger.debug('🔐 Restored session needs MFA challenge');
           setMfaMode('challenge');
-        } else if (profile.role === 'super_admin') {
-          secureLogger.debug('🔐 Restored super admin session — no factor enrolled, showing enrollment');
-          setMfaMode('enroll');
-        } else {
+        } else if (!promptEnrollmentIfRequired(profile)) {
           doRedirect(profile.simulation_only ?? undefined);
         }
       } catch (err: unknown) {
@@ -95,6 +108,17 @@ export const LoginForm: React.FC = () => {
     submitActiveRef.current = false;
     setMfaMode(null);
     await signOut();
+  };
+
+  // During the grace period "Remind me later" lets the user in; afterwards cancelling signs out.
+  const handleEnrollCancel = async () => {
+    if (enrollRequirement.status === 'grace') {
+      submitActiveRef.current = false;
+      setMfaMode(null);
+      doRedirect(profile?.simulation_only ?? undefined);
+      return;
+    }
+    await handleMFACancel();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,7 +157,8 @@ export const LoginForm: React.FC = () => {
     }
   };
 
-  // Password and passkey sign-ins both land at aal1, so both go through this gate.
+  // Password and passkey sign-ins both land at aal1, so both go through this gate;
+  // a passkey sign-in skips the code when an authenticator app is already set up.
   // Uses the access_token directly to bypass getSession() → _acquireLock: passing the
   // token makes getAuthenticatorAssuranceLevel() decode the JWT synchronously instead
   // of contending with any concurrent background lock acquisition.
@@ -143,18 +168,16 @@ export const LoginForm: React.FC = () => {
       const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(accessToken);
       if (aalError) throw aalError;
 
-      if (aal.currentLevel === 'aal2') {
-        secureLogger.debug('✅ Already at AAL2');
+      if (isMfaSatisfied(aal)) {
+        secureLogger.debug('✅ MFA satisfied (AAL2 or verified passkey)');
         doRedirect(signedInProfile?.simulation_only ?? undefined);
       } else if (aal.nextLevel === 'aal2') {
         secureLogger.debug('🔐 Showing MFA challenge');
         setMfaAccessToken(accessToken);
         setLoading(false);
         setMfaMode('challenge');
-      } else if (signedInProfile?.role === 'super_admin') {
-        secureLogger.debug('🔐 No factors enrolled — showing enrollment (required for super_admin)');
+      } else if (promptEnrollmentIfRequired(signedInProfile)) {
         setLoading(false);
-        setMfaMode('enroll');
       } else {
         secureLogger.debug('✅ No factor enrolled, MFA optional for this role — redirecting');
         doRedirect(signedInProfile?.simulation_only ?? undefined);
@@ -208,7 +231,9 @@ export const LoginForm: React.FC = () => {
         provider: 'azure',
         options: {
           scopes: 'email profile openid',
-          redirectTo: `${window.location.origin}/auth/callback`,
+          // Back to /login: the Supabase client exchanges the ?code= on load, and the
+          // restored-session effect above applies the 2FA gate before redirecting.
+          redirectTo: `${window.location.origin}/login`,
         }
       });
 
@@ -372,8 +397,8 @@ export const LoginForm: React.FC = () => {
       {mfaMode === 'enroll' && (
         <MFAEnrollment
           onSuccess={handleMFASuccess}
-          onCancel={handleMFACancel}
-          description="Super admin accounts require 2FA. Scan the QR code with an authenticator app such as Google Authenticator or Authy, then enter the code to confirm."
+          onCancel={handleEnrollCancel}
+          {...mfaEnrollmentCopy(enrollRequirement)}
         />
       )}
     </div>

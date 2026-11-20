@@ -1,3 +1,21 @@
+# ── hacCare notes ──────────────────────────────────────────────────────────────────────────────
+# We develop against the linked cloud project, not `supabase start`, so the ports and the local-only
+# services below ([db.pooler], [studio], [inbucket], [analytics], …) are unused. The sections that
+# matter are [api] schemas, [auth], [auth.sessions], [auth.email] and [functions.*].
+#
+# Mirrors production: [auth.sessions] timebox/inactivity_timeout and minimum_password_length.
+# Local placeholders, NOT production: site_url, additional_redirect_urls.
+# Unverified against production: everything else under [auth] (signup, rate limits, email, MFA).
+# Not tracked here at all: passkey settings (Relying Party ID/Origins) — dashboard only.
+#
+# How changes reach production: `supabase db push` ignores this file. Change auth settings in the
+# dashboard, then copy them back here by hand. Do not run `supabase config push` as-is — it sends
+# [api] schemas and every [auth] key (site_url included) to the linked project, so it would set the
+# production site URL to 127.0.0.1. Read its diff before confirming.
+#
+# Keep `private` out of [api] schemas. Passkeys need each tenant subdomain's exact origin in the
+# dashboard's Relying Party Origins (max 5, no wildcards).
+# ───────────────────────────────────────────────────────────────────────────────────────────────
 # For detailed configuration reference documentation, visit:
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the

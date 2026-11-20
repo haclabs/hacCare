@@ -123,6 +123,9 @@ the tenant providers. `App.tsx` holds the authenticated routes and lazy-loads he
   callable over the Data API; `private` isn't exposed (keep it out of `[api] schemas` in
   `supabase/config.toml` and the dashboard's exposed schemas). Grant `EXECUTE` to `authenticated`
   only when triggers or policies running as the signed-in user need to call the helper.
+- **Auth settings live in the dashboard, not migrations.** `supabase/config.toml` mirrors some of
+  them by hand; its header says which values match production and why `supabase config push` must
+  not be run as-is.
 
 ## Rules that cause silent data bugs
 
